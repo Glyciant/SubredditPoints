@@ -1,0 +1,75 @@
+/* Stop Dropdown Content Covering Navbar */
+.nav-wrapper .dropdown-content {
+	margin-top:64px
+}
+
+/* Change Dropdown Content Colour */
+.dropdown-content li, .dropdown-content li:hover, .dropdown-content li.active, .dropdown-content li.selected, .dropdown-content li.active.selected {
+	background-color: #424242;
+}
+
+.dropdown-content li a, .dropdown-content li span, .select-wrapper span.caret {
+  color: #fff;
+}
+
+/* Change Tabs Colour */
+.tabs .tab a {
+	color: #B9A3E3;
+}
+
+.tabs .tab a:hover {
+	color: #8963cf;
+}
+
+.tabs .indicator {
+	background-color: #6441A4;
+}
+
+/* Change Input Colours */
+.tabs .tab a, input:not([type]):focus:not([readonly])+label, input[type=text]:focus:not([readonly])+label, input[type=password]:focus:not([readonly])+label, input[type=email]:focus:not([readonly])+label, input[type=url]:focus:not([readonly])+label, input[type=time]:focus:not([readonly])+label, input[type=date]:focus:not([readonly])+label, input[type=datetime-local]:focus:not([readonly])+label, input[type=tel]:focus:not([readonly])+label, input[type=number]:focus:not([readonly])+label, input[type=search]:focus:not([readonly])+label, textarea.materialize-textarea:focus:not([readonly])+label {
+	color: #B9A3E3;
+}
+
+input:not([type]):focus:not([readonly]), input[type=text]:focus:not([readonly]), input[type=password]:focus:not([readonly]), input[type=email]:focus:not([readonly]), input[type=url]:focus:not([readonly]), input[type=time]:focus:not([readonly]), input[type=date]:focus:not([readonly]), input[type=datetime-local]:focus:not([readonly]), input[type=tel]:focus:not([readonly]), input[type=number]:focus:not([readonly]), input[type=search]:focus:not([readonly]), textarea.materialize-textarea:focus:not([readonly]) {
+	border-bottom: 1px solid #6441A4;
+	box-shadow: 0 1px 0 0 #6441A4;
+}
+
+/* Admin Button Colours */
+#admin-approve:hover, #admin-reject:hover {
+	color: #B9A3E3 !important;
+}
+
+/* Admin Images */
+#admin-logos img {
+  border-radius: 50%;
+  height: 120px;
+	border: 1px solid black;
+	transition: all .2s ease-in-out;
+	-webkit-filter: grayscale(100%);
+	filter: grayscale(100%);
+	margin: 12px;
+}
+
+#admin-logos img:hover {
+	transform: scale(1.2);
+  border-color: #9ecaed;
+  box-shadow: 0 0 10px #9ecaed;
+	-webkit-filter: none;
+	filter: none;
+}
+
+#admin-logos li {
+	display: inline-block;
+}
+
+/* Change Links Colour on Dark Backgrounds */
+.container a {
+	color: #B9A3E3;
+	transition: color .28s ease;
+}
+
+.container a:hover {
+	color: #8963cf;
+	transition: color .28s ease;
+}
