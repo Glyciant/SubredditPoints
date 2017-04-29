@@ -1,0 +1,33 @@
+<html>
+  <head>
+    <title>{{name}} for /r/Twitch: {{title}}</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <link rel="shortcut icon" href="/img/user.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/css/materialize.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/js/materialize.min.js"></script>
+  </head>
+  <body class="grey darken-4 grey-text text-lighten-3">
+    <nav>
+      <div class="nav-wrapper grey darken-3 white-text">
+        <ul class="left">
+          <li><a href="/">Home</a></li>
+          <li><a href="/about/">About</a></li>
+          <li><a href="/faq/">FAQ</a></li>
+          <li><a href="{{ github }}">GitHub</a></li>
+        </ul>
+          <ul class="right">
+            {% if reddit.name %}
+              {% if admin %}
+                <li><a href="/admin/">Admin</a></li>
+              {% endif %}
+              <li><a href="/account/">{{ reddit.name }}</a></li>
+            {% else %}
+              <li><a href="/auth/redirect/reddit/">Log In</a></li>
+            {% endif %}
+          </ul>
+      </div>
+    </nav>
+    <div class="container">

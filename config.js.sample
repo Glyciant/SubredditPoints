@@ -1,0 +1,58 @@
+var config = {};
+
+config.app = {};
+config.reddit = {};
+config.twitch = {};
+config.discord = {};
+config.twitter = {};
+config.steam = {};
+
+config.app.points = "Twoos";
+config.app.base = "";
+config.app.port = ;
+
+config.reddit.auth = {};
+config.reddit.auth.id = "";
+config.reddit.auth.secret = "";
+config.reddit.auth.redirect = config.app.base + "/auth/login/reddit/";
+
+config.reddit.bot = {};
+config.reddit.bot.username = "TwitchSubreddit";
+config.reddit.bot.password = '';
+config.reddit.bot.id = '';
+config.reddit.bot.secret = '';
+
+config.twitch.auth = {};
+config.twitch.auth.id = "";
+config.twitch.auth.secret = "";
+config.twitch.auth.redirect = config.app.base + "/auth/login/twitch/";
+
+config.twitch.community = "7958736b-9fe4-4299-b9d7-6e07d41eb493";
+
+config.discord.auth = {};
+config.discord.auth.id = "";
+config.discord.auth.secret = "";
+config.discord.auth.redirect = config.app.base + "/auth/login/discord/";
+
+config.discord.bot = {};
+config.discord.bot.token = "";
+config.discord.bot.server = "122111299713892354";
+config.discord.bot.roles = {
+  "1": "303159630522220545",
+  "10": "303159747291381761",
+  "25": "303159870280957953",
+  "50": "303160141178732544",
+  "75": "303160285907255296",
+  "100": "303160377942867968",
+  "200": "303160506020265985",
+  "300": "303160873311010817",
+  "400": "303161026327609345",
+  "500": "303161135761457153",
+  "mods": "122114814775394306",
+  "helpers": "122115312026910720",
+  "admins": "122168299143430148",
+  "global_mods": "122168328683782146",
+  "staff": "122168349546250241"
+}
+
+module.exports = config;

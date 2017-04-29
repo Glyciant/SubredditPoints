@@ -1,0 +1,47 @@
+{% include "./header.html" %}
+
+<div class="row grey darken-3" style="margin: 10px;">
+  <div class="col s12">
+    <h3 class="center">FAQ</h3>
+    <h5>Why is this system called "Twoos"?</h5>
+    <p>The points on /r/Twitch are named after our subreddit snoo. Twoo is short for Twitch Snoo.</p>
+    <br />
+    <h5>How can I get Twoos?</h5>
+    <p>In short, the best way to get Twoos is to contribute to the community and be helpful wherever possible! For a full list, take a look at the <a href="/">Home Page</a>.</p>
+    <br />
+    <h5>What can I use Twoos for?</h5>
+    <p>Currently, the main use for Twoos is that it changes your flair and Discord role to make you stand out more as a dedicated and helpful community member. Again, for a full list, take a look at the <a href="/">Home Page</a>.</p>
+    <br />
+    <h5>How do I get started?</h5>
+    <p>Click <a href="/auth/redirect/reddit/">Log In</a> on the top navigation bar. You will then be taken to Reddit so we can connect to your account. Once you click the "Allow" button, you will be brought back to this site and logged in.</p>
+    <br />
+    <h5>How do I link my Twitch and Discord accounts?</h5>
+    <p>If linking your Discord account, <a href="https://redd.it/5cly2l">make sure you join the /r/Twitch Discord Server</a>. Then, log in and you will be taken to the <a href="/account/">Account Page</a>. From here, click the "Link" button under the Twitch and Discord title and you will be taken to the respective login page. You will then be brought back to this site again and your accounts are linked.</p>
+    <br />
+    <h5>How do I nominate a post/comment so the author gets Twoos?</h5>
+    <p>You can reply to any comment or post on /r/Twitch with the message "!nominate" and the bot will automatically detect it. You cannot do this to your own posts/comments or if it has already been nominated.</p>
+    <br />
+    <h5>I changed my Twitch/Discord name. How do I update my information?</h5>
+    <p>Go to your <a href="/account/">Account Page</a> when you are logged in. Then click the "Unlink" button under the Twitch/Discord title. You can then reconnect your account and the system will detect the new username. Don't worry, your balance won't be affected by this.</p>
+    <br />
+    <h5>When attempting to log in or connect an account, I get a 403 error. Why?</h5>
+    <p>On this site, a 403 error represents that your browser session was reset before you were able to log in. This can happen for a few reasons, but it's easily fixed by trying again.</p>
+    <br />
+    <h5>When I link my Twitch account, it says it can view my email address. Why?</h5>
+    <p>The API scope on Twitch for identifying users includes viewing email addresses. It is not read or stored at any point. Subreddit Moderators will always use modmail on Reddit to contact you where necessary.</p>
+    <br />
+    <h5>When I link my Discord account, it says it can view all my servers. Why?</h5>
+    <p>The application needs to know your servers so it is able to detect if you are in the /r/Twitch to award {{ name }}. There is no information read or stored about other servers.</p>
+    <br />
+    <h5>Where can I learn more about this system?</h5>
+    <p>If you would like to ask any further questions, you may want to try submitting a post to /r/Twitch <a href="https://www.reddit.com/r/Twitch/submit?selftext=true">here</a> or asking in the Discord server <a href="https://redd.it/5cly2l">here</a>.</p>
+    <br />
+    <h5>I have a suggestion or bug with this system. What should I do?</h5>
+    <p>Please submit all bugs and suggestions to <a href="https://www.reddit.com/message/compose?to=%2Fr%2FTwitch">modmail</a>.</p>
+    <br />
+    <h5>I don't think I was awarded points for something. What should I do?</h5>
+    <p>Please <a href="https://www.reddit.com/message/compose?to=%2Fr%2FTwitch">modmail</a> us and explain the issue in as much detail as possible.</p>
+  </div>
+</div>
+
+{% include "./footer.html" %}

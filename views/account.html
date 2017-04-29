@@ -1,0 +1,122 @@
+{% include "./header.html" %}
+
+<div class="row" style="margin: 10px;">
+  <div class="col s12">
+    <ul class="tabs grey darken-4 tabs-fixed-width" style="overflow: hidden;">
+      <li class="tab col s6"><a href="#accounts">Linked Accounts</a></li>
+      <li class="tab col s6"><a href="#transactions">Transactions</a></li>
+    </ul>
+  </div>
+</div>
+<div class="row" style="margin: 10px;">
+  <div id="accounts" class="col s12">
+    <div class="col l4">
+      <ul class="collection with-header">
+        <li class="collection-header center grey darken-3"><img src="/img/reddit.png">
+        <h4>Reddit</h4></li>
+        {% if reddit.id %}
+          <li class="collection-item grey darken-3"><h5 class="center">Linked</h5></li>
+          <li class="collection-item grey darken-3">
+            <table>
+              <tbody>
+                <tr>
+                  <td style="padding: 5px;"><strong>Reddit ID:</strong></td>
+                  <td style="padding: 5px;">{{ reddit.id }}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px;"><strong>Reddit Name:</strong></td>
+                  <td style="padding: 5px;">{{ reddit.name }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </li>
+          <li class="collection-item grey darken-3"><a href="/auth/logout/" class="btn-large waves-effect waves-purple grey darken-2 white-text" style="width: 100%;">Logout</a></li>
+        {% else %}
+          <li class="collection-item grey darken-3"><a href="/auth/redirect/reddit/" class="btn-large waves-effect waves-purple grey darken-2 white-text" style="width: 100%;">Link Reddit</a></li>
+        {% endif %}
+      </ul>
+    </div>
+    <div class="col l4">
+      <ul class="collection with-header">
+        <li class="collection-header center grey darken-3"><img src="/img/twitch.png">
+        <h4>Twitch</h4></li>
+        {% if twitch.id %}
+          <li class="collection-item grey darken-3"><h5 class="center">Linked</h5></li>
+          <li class="collection-item grey darken-3">
+            <table>
+              <tbody>
+                <tr>
+                  <td style="padding: 5px;"><strong>Twitch ID:</strong></td>
+                  <td style="padding: 5px;">{{ twitch.id }}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px;"><strong>Twitch Name:</strong></td>
+                  <td style="padding: 5px;">{{ twitch.name }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </li>
+          <li class="collection-item grey darken-3"><a href="/auth/disconnect/twitch/" class="btn-large waves-effect waves-purple grey darken-2 white-text" style="width: 100%;">Unlink Twitch</a></li>
+        {% else %}
+          <li class="collection-item grey darken-3"><a href="/auth/redirect/twitch/" class="btn-large waves-effect waves-purple grey darken-2 white-text" style="width: 100%;">Link Twitch</a></li>
+        {% endif %}
+      </ul>
+    </div>
+    <div class="col l4">
+      <ul class="collection with-header">
+        <li class="collection-header center grey darken-3"><img src="/img/discord.png">
+        <h4>Discord</h4></li>
+        {% if discord.id %}
+          <li class="collection-item grey darken-3"><h5 class="center">Linked</h5></li>
+          <li class="collection-item grey darken-3">
+            <table>
+              <tbody>
+                <tr>
+                  <td style="padding: 5px;"><strong>Discord ID:</strong></td>
+                  <td style="padding: 5px;">{{ discord.id }}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px;"><strong>Discord Name:</strong></td>
+                  <td style="padding: 5px;">{{ discord.name }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </li>
+          <li class="collection-item grey darken-3"><a href="/auth/disconnect/discord/" class="btn-large waves-effect waves-purple grey darken-2 white-text" style="width: 100%;">Unlink Discord</a></li>
+        {% else %}
+          <li class="collection-item grey darken-3"><a href="/auth/redirect/discord/" class="btn-large waves-effect waves-purple grey darken-2 white-text" style="width: 100%;">Link Discord</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+  <div id="transactions" class="col s12">
+    <table>
+      <thead>
+        <th>ID</th>
+        <th>Date</th>
+        <th>From</th>
+        <th>Title</th>
+        <th>Description</th>
+        <th>Difference</th>
+      </thead>
+      <tbody>
+        {% for record in data %}
+          <tr>
+            <td>{{ record.timestamp }}</td>
+            <td>{{ record.timestamp|date("d/m/Y") }}</td>
+            <td>{{ record.from }}</td>
+            <td>{{ record.title }}</td>
+            {% if record.description %}
+              <td>{{ record.description }}</td>
+            {% else %}
+              <td>-</td>
+            {% endif %}
+            <td>{{ record.difference }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% include "./footer.html" %}
