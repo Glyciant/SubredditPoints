@@ -35,6 +35,14 @@ input:not([type]):focus:not([readonly]), input[type=text]:focus:not([readonly]),
 	box-shadow: 0 1px 0 0 #6441A4;
 }
 
+.switch label input[type=checkbox]:checked+.lever {
+	background-color: #9a7fcc;
+}
+
+.switch label input[type=checkbox]:checked+.lever:after, input[type=range]+.thumb {
+	background-color: #6441A5;
+}
+
 /* Admin Button Colours */
 #admin-approve:hover, #admin-reject:hover {
 	color: #B9A3E3 !important;
@@ -64,12 +72,12 @@ input:not([type]):focus:not([readonly]), input[type=text]:focus:not([readonly]),
 }
 
 /* Change Links Colour on Dark Backgrounds */
-.container a {
+.container a:not(.btn) {
 	color: #B9A3E3;
 	transition: color .28s ease;
 }
 
-.container a:hover {
+.container a:not(.btn):hover {
 	color: #8963cf;
 	transition: color .28s ease;
 }

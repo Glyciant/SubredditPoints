@@ -3,9 +3,14 @@
 <div class="row" style="margin-top: 10px;">
   <div class="col s12">
     <ul class="tabs grey darken-4 tabs-fixed-width" style="overflow: hidden;">
-      <li class="tab col s4"><a href="#queue">Nomination Queue</a></li>
-      <li class="tab col s4"><a href="#manage-users">Manage Users</a></li>
-      <li class="tab col s4"><a href="#search">Search Transactions</a></li>
+      {% if mod %}
+        <li class="tab col s4"><a href="#queue">Nomination Queue</a></li>
+        <li class="tab col s4"><a href="#manage-users">Manage Users</a></li>
+        <li class="tab col s4"><a href="#search">Search Transactions</a></li>
+      {% else %}
+        <li class="tab col s6"><a href="#queue">Nomination Queue</a></li>
+        <li class="tab col s6"><a href="#search">Search Transactions</a></li>
+      {% endif %}
     </ul>
   </div>
 </div>
@@ -114,156 +119,158 @@
       </table>
     </div>
   </div>
-  <div id="manage-users" class="col s12">
-    <ul class="tabs grey darken-4 tabs-fixed-width" style="overflow: hidden;">
-      <li class="tab col s4"><a href="#get-user">Get User</a></li>
-      <li class="tab col s4"><a href="#generate-users">Generate User</a></li>
-      <li class="tab col s4"><a href="#user-list">User List</a></li>
-    </ul>
-    <div id="get-user" class="col s12" style="margin-top: 10px;">
-      <div class="row">
-        <div class="col s8 input-field">
-          <input id="reddit-name" type="text">
-          <label for="reddit-name">Reddit Username</label>
+  {% if mod %}
+    <div id="manage-users" class="col s12">
+      <ul class="tabs grey darken-4 tabs-fixed-width" style="overflow: hidden;">
+        <li class="tab col s4"><a href="#get-user">Get User</a></li>
+        <li class="tab col s4"><a href="#generate-users">Generate User</a></li>
+        <li class="tab col s4"><a href="#user-list">User List</a></li>
+      </ul>
+      <div id="get-user" class="col s12" style="margin-top: 10px;">
+        <div class="row">
+          <div class="col s8 input-field">
+            <input id="reddit-name" type="text">
+            <label for="reddit-name">Reddit Username</label>
+          </div>
+          <div class="col s4">
+            <a id="get-user-submit" class="btn waves-effect waves-purple grey darken-3" style="margin-top: 15px; width: 100%;">Submit</a>
+          </div>
         </div>
-        <div class="col s4">
-          <a id="get-user-submit" class="btn waves-effect waves-purple grey darken-3" style="margin-top: 15px; width: 100%;">Submit</a>
+        <div id="user-data" class="row" style="display: none;">
+          <table>
+            <tbody>
+              <tr>
+                <td><strong>Reddit ID</strong></td>
+                <td id="user-reddit-id"></td>
+              </tr>
+              <tr>
+                <td><strong>Reddit Name</strong></td>
+                <td id="user-reddit-name"></td>
+              </tr>
+              <tr>
+                <td><strong>Twitch ID</strong></td>
+                <td id="user-twitch-id"></td>
+              </tr>
+              <tr>
+                <td><strong>Twitch Name</strong></td>
+                <td id="user-twitch-name"></td>
+              </tr>
+              <tr>
+                <td><strong>Discord ID</strong></td>
+                <td id="user-discord-id"></td>
+              </tr>
+              <tr>
+                <td><strong>Discord Name</strong></td>
+                <td id="user-discord-name"></td>
+              </tr>
+              <tr>
+                <td><strong>Transactions</strong></td>
+                <td id="user-transactions"></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="col s6 input-field">
+            <input id="user-balance" type="number">
+            <label for="user-balance">Balance</label>
+          </div>
+          <div class="input-field col s6 white-text" id="user-type">
+            <select>
+              <option value="user" selected>User</option>
+              <option value="mod">Moderator</option>
+              <option value="helper">Community Helper</option>
+              <option value="staff">Staff</option>
+              <option value="admin">Admin</option>
+              <option value="global_mod">Global Moderator</option>
+              <option value="ama">AMA Host</option>
+              <option value="bot">Bot</option>
+            </select>
+            <label>Type</label>
+          </div>
+          <div class="col s12">
+            <a id="update-user" class="btn waves-effect waves-purple grey darken-3" style="margin-top: 15px; width: 100%;" data-mod="{{ reddit.name }}">Update</a>
+          </div>
         </div>
       </div>
-      <div id="user-data" class="row" style="display: none;">
-        <table>
-          <tbody>
-            <tr>
-              <td><strong>Reddit ID</strong></td>
-              <td id="user-reddit-id"></td>
-            </tr>
-            <tr>
-              <td><strong>Reddit Name</strong></td>
-              <td id="user-reddit-name"></td>
-            </tr>
-            <tr>
-              <td><strong>Twitch ID</strong></td>
-              <td id="user-twitch-id"></td>
-            </tr>
-            <tr>
-              <td><strong>Twitch Name</strong></td>
-              <td id="user-twitch-name"></td>
-            </tr>
-            <tr>
-              <td><strong>Discord ID</strong></td>
-              <td id="user-discord-id"></td>
-            </tr>
-            <tr>
-              <td><strong>Discord Name</strong></td>
-              <td id="user-discord-name"></td>
-            </tr>
-            <tr>
-              <td><strong>Transactions</strong></td>
-              <td id="user-transactions"></td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="col s6 input-field">
-          <input id="user-balance" type="number">
-          <label for="user-balance">Balance</label>
+      <div id="generate-users" class="col s12">
+        <div class="row">
+          <div class="col s4 input-field">
+            <input id="generate-reddit-name" type="text">
+            <label for="generate-reddit-name">Reddit Username</label>
+          </div>
+          <div class="col s4 input-field">
+            <input id="generate-user-balance" type="number" value="0">
+            <label for="generate-user-balance">Balance</label>
+          </div>
+          <div class="input-field col s4 white-text" id="generate-user-type">
+            <select>
+              <option value="user" selected>User</option>
+              <option value="mod">Moderator</option>
+              <option value="helper">Community Helper</option>
+              <option value="staff">Staff</option>
+              <option value="admin">Admin</option>
+              <option value="global_mod">Global Moderator</option>
+              <option value="ama">AMA Host</option>
+              <option value="bot">Bot</option>
+            </select>
+            <label>Type</label>
+          </div>
+          <div class="col s12">
+            <a id="generate-user" class="btn waves-effect waves-purple grey darken-3" style="margin-top: 15px; width: 100%;">Generate</a>
+          </div>
         </div>
-        <div class="input-field col s6 white-text" id="user-type">
-          <select>
-            <option value="user" selected>User</option>
-            <option value="mod">Moderator</option>
-            <option value="helper">Community Helper</option>
-            <option value="staff">Staff</option>
-            <option value="admin">Admin</option>
-            <option value="global_mod">Global Moderator</option>
-            <option value="ama">AMA Host</option>
-            <option value="bot">Bot</option>
-          </select>
-          <label>Type</label>
+      </div>
+      <div id="user-list" class="col s12">
+        <div class="row">
+          <div class="input-field col s4 white-text" id="user-list-source">
+            <select>
+              <option value="reddit" selected>Reddit Flairs</option>
+              <option value="discord">Discord Roles</option>
+            </select>
+            <label>Source</label>
+          </div>
+          <div class="input-field col s4 white-text" id="user-list-field">
+            <select>
+              <option value="user" selected>User</option>
+              <option value="mod">Moderator</option>
+              <option value="helper">Community Helper</option>
+              <option value="staff">Staff</option>
+              <option value="admin">Admin</option>
+              <option value="global_mod">Global Moderator</option>
+              <option value="ama">AMA Host</option>
+              <option value="bot">Bot</option>
+              <option value="points-1">1 {{ name }}</option>
+              <option value="points-10">10 {{ name }}</option>
+              <option value="points-25">25 {{ name }}</option>
+              <option value="points-50">50 {{ name }}</option>
+              <option value="points-75">75 {{ name }}</option>
+              <option value="points-100">100 {{ name }}</option>
+              <option value="points-200">200 {{ name }}</option>
+              <option value="points-300">300 {{ name }}</option>
+              <option value="points-400">400 {{ name }}</option>
+              <option value="points-500">500 {{ name }}</option>
+            </select>
+            <label>Field</label>
+          </div>
+          <div class="col s4">
+            <a id="get-user-list" class="btn waves-effect waves-purple grey darken-3" style="margin-top: 15px; width: 100%;">Get User List</a>
+          </div>
         </div>
-        <div class="col s12">
-          <a id="update-user" class="btn waves-effect waves-purple grey darken-3" style="margin-top: 15px; width: 100%;" data-mod="{{ reddit.name }}">Update</a>
+        <div class="col s12" id="user-list-table" style="display: none;">
+          <table>
+            <thead>
+              <th>Reddit Name</th>
+              <th>Twitch Name</th>
+              <th>Discord Name</th>
+              <th>Balance</th>
+              <th>Type</th>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
-    <div id="generate-users" class="col s12">
-      <div class="row">
-        <div class="col s4 input-field">
-          <input id="generate-reddit-name" type="text">
-          <label for="generate-reddit-name">Reddit Username</label>
-        </div>
-        <div class="col s4 input-field">
-          <input id="generate-user-balance" type="number" value="0">
-          <label for="generate-user-balance">Balance</label>
-        </div>
-        <div class="input-field col s4 white-text" id="generate-user-type">
-          <select>
-            <option value="user" selected>User</option>
-            <option value="mod">Moderator</option>
-            <option value="helper">Community Helper</option>
-            <option value="staff">Staff</option>
-            <option value="admin">Admin</option>
-            <option value="global_mod">Global Moderator</option>
-            <option value="ama">AMA Host</option>
-            <option value="bot">Bot</option>
-          </select>
-          <label>Type</label>
-        </div>
-        <div class="col s12">
-          <a id="generate-user" class="btn waves-effect waves-purple grey darken-3" style="margin-top: 15px; width: 100%;">Generate</a>
-        </div>
-      </div>
-    </div>
-    <div id="user-list" class="col s12">
-      <div class="row">
-        <div class="input-field col s4 white-text" id="user-list-source">
-          <select>
-            <option value="reddit" selected>Reddit Flairs</option>
-            <option value="discord">Discord Roles</option>
-          </select>
-          <label>Source</label>
-        </div>
-        <div class="input-field col s4 white-text" id="user-list-field">
-          <select>
-            <option value="user" selected>User</option>
-            <option value="mod">Moderator</option>
-            <option value="helper">Community Helper</option>
-            <option value="staff">Staff</option>
-            <option value="admin">Admin</option>
-            <option value="global_mod">Global Moderator</option>
-            <option value="ama">AMA Host</option>
-            <option value="bot">Bot</option>
-            <option value="points-1">1 {{ name }}</option>
-            <option value="points-10">10 {{ name }}</option>
-            <option value="points-25">25 {{ name }}</option>
-            <option value="points-50">50 {{ name }}</option>
-            <option value="points-75">75 {{ name }}</option>
-            <option value="points-100">100 {{ name }}</option>
-            <option value="points-200">200 {{ name }}</option>
-            <option value="points-300">300 {{ name }}</option>
-            <option value="points-400">400 {{ name }}</option>
-            <option value="points-500">500 {{ name }}</option>
-          </select>
-          <label>Field</label>
-        </div>
-        <div class="col s4">
-          <a id="get-user-list" class="btn waves-effect waves-purple grey darken-3" style="margin-top: 15px; width: 100%;">Get User List</a>
-        </div>
-      </div>
-      <div class="col s12" id="user-list-table" style="display: none;">
-        <table>
-          <thead>
-            <th>Reddit Name</th>
-            <th>Twitch Name</th>
-            <th>Discord Name</th>
-            <th>Balance</th>
-            <th>Type</th>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+  {% endif %}
   <div id="search" class="col s12">
     <div class="row">
       <div class="input-field col s4 white-text" id="search-source">

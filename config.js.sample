@@ -52,7 +52,8 @@ config.discord.bot.roles = {
   "helpers": "122115312026910720",
   "admins": "122168299143430148",
   "global_mods": "122168328683782146",
-  "staff": "122168349546250241"
+  "staff": "122168349546250241",
+  "intro": "310468161214349312"
 }
 
 module.exports = config;

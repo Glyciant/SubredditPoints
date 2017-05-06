@@ -12,11 +12,8 @@ $(document).ready(function() {
   $("#admin-logos li img").hover(function() {
     $("#username").html($(this).data("reddit"));
     $("#description").html($(this).data("bio"));
-    $("#admin-bio").slideDown();
   }, function() {
-    $("#admin-bio").slideUp(function() {
-      $("#username").html("");
-      $("#description").html("");
-    });
+    $("#username").html("Hover over the images for a short bio!");
+    $("#description").html("Site Admins are /r/Twitch Moderators and Community Helpers.<br />&zwnj;");
   });
 });

@@ -88,6 +88,39 @@
         {% endif %}
       </ul>
     </div>
+    <div class="col l12 grey darken-3" style="border: 1px solid #e0e0e0;">
+      <h4 class="center">Flair Text & TwitchDB Flair</h4>
+      {% if intro == "no_twitch" %}
+        <p class="center">You must link your Twitch account to use TwitchDB.</p>
+      {% elseif intro == "no_account" %}
+        <p class="center">Your linked Twitch account doesn't exist on TwitchDB.</p>
+      {% elseif intro == "no_intro" %}
+        <p class="center">Your linked Twitch account doesn't appear to have an intro on TwitchDB.</p>
+      {% elseif intro == "no_account" %}
+        <p class="center">Your linked Twitch account doesn't exist on TwitchDB.</p>
+      {% elseif intro == "pending" %}
+        <p class="center">Your intro is pending on TwitchDB.</p>
+      {% elseif intro == "rejected" %}
+        <p class="center">Your intro was rejected on TwitchDB.</p>
+      {% elseif intro == "approved" %}
+        <p class="center">Your intro was approved on TwitchDB. You may use the TwitchDB intro flair and instead of Twoos.</p>
+        <div class="switch center" style="margin-bottom: 15px;">
+          <label style="color: #fff;">
+            Use Twoos Flair
+            <input type="checkbox" id="twitchdb">
+            <span class="lever"></span>
+            Use TwitchDB Flair
+          </label>
+        </div>
+      {% endif %}
+      <div class="input-field col s6">
+        <input id="flair-text" type="text" value="{{ flair }}" data-length="40">
+        <label for="flair-text">Flair Text</label>
+      </div>
+      <div class="col s6">
+        <a id="update-flair" href="#" class="btn waves-effect waves-purple grey darken-2 white-text" data-username="{{ reddit.name }}" style="margin-top: 15px; width: 100%;">Update</a>
+      </div>
+    </div>
   </div>
   <div id="transactions" class="col s12">
     <table>
@@ -118,5 +151,7 @@
     </table>
   </div>
 </div>
+
+<script src="/js/account.js"></script>
 
 {% include "./footer.html" %}

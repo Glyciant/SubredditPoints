@@ -9,6 +9,8 @@ $(document).delegate("#get-user-submit", "click", function() {
       $("#user-data").slideUp();
     }
     else if (data.message == "found") {
+      $("#user-bio").parent().remove();
+      $('#user-display-type').remove();
       $("#user-reddit-id").html(data.data.reddit_id);
       $("#user-reddit-name").html(data.data.reddit_name);
       if (data.data.twitch_id) {
@@ -36,9 +38,6 @@ $(document).delegate("#get-user-submit", "click", function() {
       }
       if (data.data.bio) {
         $('<div class="col s12 input-field"><input id="user-bio" type="text" value="' + data.data.bio + '"><label for="user-bio">Bio</label></div>').insertAfter("#user-type");
-      }
-      else {
-        $("#user-bio").parent().remove();
       }
       $('select').material_select();
       $("#update-user").data("username", data.data.reddit_username);

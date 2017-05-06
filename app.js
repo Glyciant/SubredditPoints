@@ -9,6 +9,8 @@ var express = require('express'),
 	cookieParser = require('cookie-parser'),
 	swig = require('swig'),
 	restler = require('restler'),
+	distance = require('jaro-winkler'),
+	stopword = require('stopword'),
 	cron = require('node-cron'),
 	discord = require('discord.js'),
 	client = new discord.Client();
@@ -39,6 +41,9 @@ app.get('*', function(req, res, next) {
 			if (data) {
 				if (data.type == "mod" || data.type == "helper") {
 					res.locals.admin = true;
+				}
+				if (data.type == "mod") {
+					res.locals.mod = true;
 				}
 				if (data.twitch_id) {
 					res.locals.twitch = {
@@ -82,7 +87,23 @@ app.get('/faq/', function(req, res) {
 app.get('/account/', function(req, res) {
 	if (req.session.reddit) {
 		db.users.getByRedditUsername(req.session.reddit.name.toLowerCase()).then(function(data) {
-			res.render('account', { title: "Account", data: data.transactions });
+			helpers.reddit.getFlair(req.session.reddit.name).then(function(flair) {
+				if (data.twitch_id) {
+					restler.get('http://www.twitchdb.tv/api/intro/status/' + data.twitch_id).on('complete', function(twitchdb) {
+						var intro;
+						if (twitchdb.message == "has_intro") {
+							intro = twitchdb.intro_status;
+						}
+						else {
+							intro = twitchdb.message;
+						}
+						res.render('account', { title: "Account", data: data.transactions, flair: flair, intro: intro });
+					});
+				}
+				else {
+					res.render('account', { title: "Account", data: data.transactions, flair: flair, intro: "no_twitch" });
+				}
+			});
 		});
 	}
 	else {
@@ -203,6 +224,7 @@ app.get('/auth/login/reddit/', function(req, res) {
 								discord_id: null,
 								discord_name: null,
 								type: "user",
+								twitchdb: false,
 								bio: null,
 								balance: 0,
 								display_type: null,
@@ -424,6 +446,16 @@ app.get('/auth/logout/', function(req, res) {
 	res.redirect("/");
 });
 
+// Get user logged in
+app.post('/users/get/session/', function(req, res) {
+	if (req.session.reddit) {
+		res.send(req.session.reddit.name == req.body.username)
+	}
+	else {
+		res.send("not_found")
+	}
+});
+
 // Get user from database
 app.post('/users/get/', function(req, res) {
 	db.users.getByRedditUsername(req.body.username).then(function(data) {
@@ -486,8 +518,25 @@ app.post('/users/update/', function(req, res) {
 			data.bio = req.body.bio;
 			data.display_type = req.body.display_type;
 			db.users.update(data.reddit_id, data).then(function() {
-				Promise.all([helpers.reddit.setFlair(data), helpers.discord.setRole(data)]).then(function(response) {
+				Promise.all([helpers.reddit.setFlair(data, null), helpers.discord.setRole(data)]).then(function(response) {
 					res.send({ message: "success", data: data, old: old });
+				});
+			});
+		}
+	});
+});
+
+// Update user for TwitchDB
+app.post('/users/update/twitchdb/', function(req, res) {
+	db.users.getByRedditUsername(req.body.username).then(function(data) {
+		if (!data) {
+			res.send({ message: "not_found" });
+		}
+		else {
+			data.twitchdb = (req.body.twitchdb == "true");
+			db.users.update(data.reddit_id, data).then(function() {
+				Promise.all([helpers.reddit.setFlair(data, req.body.text), helpers.discord.setRole(data)]).then(function(response) {
+					res.send({ message: "success", data: data });
 				});
 			});
 		}
@@ -722,6 +771,9 @@ client.login(config.discord.bot.token);
 var last_comment;
 cron.schedule('*/3 * * * * *', function() {
 	restler.get('https://www.reddit.com/r/Twitch/comments.json?limit=1').on("complete", function(data) {
+		if (!last_comment) {
+			last_comment = data.data.children[0].data.id;
+		}
 		if (last_comment != data.data.children[0].data.id) {
 			last_comment = data.data.children[0].data.id;
 			if (data.data.children[0].data.body == "!nominate") {
@@ -757,6 +809,7 @@ cron.schedule('*/3 * * * * *', function() {
 															discord_id: null,
 															discord_name: null,
 															type: "user",
+															twitchdb: false,
 															bio: null,
 															balance: 1,
 															display_type: null,
@@ -827,6 +880,7 @@ cron.schedule('*/3 * * * * *', function() {
 															discord_id: null,
 															discord_name: null,
 															type: "user",
+															twitchdb: false,
 															bio: null,
 															balance: 1,
 															display_type: null,
@@ -916,6 +970,7 @@ cron.schedule('*/3 * * * * *', function() {
 											discord_id: null,
 											discord_name: null,
 											type: "user",
+											twitchdb: false,
 											bio: null,
 											balance: 1,
 											display_type: null,
@@ -938,8 +993,8 @@ cron.schedule('*/3 * * * * *', function() {
 												}
 											]
 										};
+										db.users.insert(data);
 									});
-									db.users.insert(data);
 								}
 							});
 						}
@@ -951,50 +1006,72 @@ cron.schedule('*/3 * * * * *', function() {
 });
 
 // Check Reddit API for new posts
-var last_posts = [];
 cron.schedule('*/3 * * * * *', function() {
 	restler.get('https://www.reddit.com/r/Twitch/new.json?limit=1').on("complete", function(data) {
-		if (last_posts.indexOf(data.data.children[0].data.id) === -1) {
-			last_posts.push(data.data.children[0].data.id);
-			db.users.getByRedditUsername(data.data.children[0].data.author.toLowerCase()).then(function(user) {
-				if (user.type == "user" || !user) {
-					var re = new RegExp(" ", "g"),
-							title = data.data.children[0].data.title.replace(re, "+");
-					restler.get('https://www.reddit.com/r/Twitch/search.json?q=' + title + '&restrict_sr=on&sort=relevance&t=all').on("complete", function(search) {
-						if (search.data.children.length > 0) {
-							var results = search.data.children,
-									j = 0,
-									links = [];
-							for (var i in results) {
-								if (j > 4) {
-									break;
-								}
-								j++;
-								links.push({ title: results[i].data.title, link: results[i].data.url })
-							}
-							var comment = `Greetings ` + data.data.children[0].data.author + `,
-
-As part of an attempt to cut back on the number of repetitive threads on /r/Twitch, we are trying to provide a short list of posts from Reddit's search function that may help you. The search found the following results for you:
-
-`
-							for (var i in links) {
-								comment = comment + `- [` + links[i].title + `](` + links[i].link + `)
-`
-							}
-							comment = comment + `
-We hope these links will be helpful. If so, consider deleting your post to reduce spam on the subreddit. If the suggested links are irrelvant to your question, feel free to ignore this comment and continue as you were.
-
-*I'm a bot and this action was performed automatically. If you have any questions or concerns, please contact the subreddit moderators via [modmail](https://www.reddit.com/message/compose?to=%2Fr%2FTwitch).*`
-							helpers.reddit.comment("t3_" + data.data.children[0].data.id, comment).then(function() {
-								restler.get('https://www.reddit.com/user/' + config.reddit.bot.username  + "/comments.json?limit=1&sort=new").on('complete', function(account) {
-									helpers.reddit.distinguish("t1_" + account.data.children[0].data.id);
-								});
-							});
-						}
-					});
+		restler.get(data.data.children[0].data.url + ".json").on("complete", function(exists) {
+			if (exists) {
+				for (var k in exists[1].data.children) {
+					if (exists[1].data.children[k].data.author == config.reddit.bot.username) {
+						return;
+					}
 				}
-			});
-		}
+				db.users.getByRedditUsername(data.data.children[0].data.author.toLowerCase()).then(function(user) {
+					if (!user || user.type == "user") {
+						var re = new RegExp(" ", "g"),
+								title = data.data.children[0].data.title.replace(re, "+");
+						restler.get('https://www.reddit.com/r/Twitch/search.json?q=' + title + '&restrict_sr=on&limit=100&sort=new&t=all').on("complete", function(search) {
+							if (search.data && search.data.childen) {
+								var results = search.data.children,
+										j = 0,
+										posts = [];
+										links = [];
+
+								for (var m in results) {
+									if (data.data.children[0].data.id != results[m].data.id) {
+										var difference = distance(stopword.removeStopwords(data.data.children[0].data.title.replace(/[^\w\s]/gi, '').split(" ")).join(" "), stopword.removeStopwords(results[m].data.title.replace(/[^\w\s]/gi, '').split(" ")).join(" "), { caseSensitive: false });
+										if (difference >= 0.6) {
+											posts.push({ title: results[m].data.title, link: results[m].data.url, distance: difference });
+										}
+									}
+								}
+								if (posts.length > 0) {
+									posts.sort(function(a, b) {
+									  return parseFloat(a.distance) - parseFloat(b.distance);
+									});
+									posts.reverse();
+									for (var i in posts) {
+										if (j > 4) {
+											break;
+										}
+										j++;
+										links.push({ title: posts[i].title, link: posts[i].link });
+									}
+									var comment = `Greetings ` + data.data.children[0].data.author + `,
+
+		As part of an attempt to cut back on the number of repetitive threads on /r/Twitch, we are trying to provide a short list of posts from Reddit's search function that may help you. The search found the following results for you:
+
+		`
+									for (var i in links) {
+										comment = comment + `- [` + links[i].title + `](` + links[i].link + `)
+		`
+									}
+									comment = comment + `
+		We hope these links will be helpful. If so, consider deleting your post to reduce spam on the subreddit. If the suggested links are irrelvant to your question, feel free to ignore this comment and continue as you were.
+
+		*I'm a bot and this action was performed automatically. If you have any questions or concerns, please contact the subreddit moderators via [modmail](https://www.reddit.com/message/compose?to=%2Fr%2FTwitch).*`
+
+									helpers.reddit.comment("t3_" + data.data.children[0].data.id, comment).then(function() {
+										restler.get('https://www.reddit.com/user/' + config.reddit.bot.username  + "/comments.json?limit=1&sort=new").on('complete', function(account) {
+											helpers.reddit.distinguish("t1_" + account.data.children[0].data.id);
+										});
+									});
+								}
+							}
+						});
+					}
+				});
+			}
+		});
 	});
 });
 

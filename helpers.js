@@ -5,7 +5,31 @@ var config = require('./config'),
     client = new discord.Client();
 
 var reddit = {
-  setFlair: (user) => {
+  getFlair: (username) => {
+    return new Promise(function(resolve, reject) {
+      restler.post('https://www.reddit.com/api/v1/access_token', {
+        username: config.reddit.bot.id,
+        password: config.reddit.bot.secret,
+        data: {
+          grant_type: "password",
+          username: config.reddit.bot.username,
+          password: config.reddit.bot.password,
+        }
+      }).on("complete", function(data) {
+        restler.get('https://oauth.reddit.com/r/Twitch/api/flairlist.json?name=' + username, {
+          accessToken: data.access_token
+        }).on("complete", function(api) {
+          if (api.users[0].user == username) {
+            resolve(api.users[0].flair_text);
+          }
+          else {
+            resolve("no_match");
+          }
+        });
+      });
+    });
+  },
+  setFlair: (user, text) => {
     return new Promise(function(resolve, reject) {
       restler.post('https://www.reddit.com/api/v1/access_token', {
         username: config.reddit.bot.id,
@@ -24,9 +48,9 @@ var reddit = {
               api_type: "json",
               css_class: "",
               name: user.reddit_name,
-              text: ""
+              text: text
             };
-            if (api.users[0].flair_text === null || api.users[0].flair_text.length === 0 || api.users[0].flair_text.length === "") {
+            if ((api.users[0].flair_text === null || api.users[0].flair_text.length === 0 || api.users[0].flair_text.length === "") && !text) {
               if (user.balance > 0) {
                 flair.text = user.balance + " " + config.app.points;
               }
@@ -34,10 +58,10 @@ var reddit = {
                 flair.text = "bleedPurple";
               }
             }
-            else {
+            else if (!text) {
               flair.text = api.users[0].flair_text;
             }
-            if ((user.type == "user" && user.display_type === null) || user.display_type == "user") {
+            if (user.type == "user" || user.display_type == "user") {
               if (user.balance >= 1) {
                 flair.css_class = "bits-1";
               }
@@ -68,27 +92,30 @@ var reddit = {
               if (user.balance >= 500) {
                 flair.css_class = "bits-500";
               }
+              if (user.twitchdb === true) {
+                flair.css_class = "introflair";
+              }
             }
             else {
-              if ((user.type == "admin" && user.display_type === null) || user.display_type == "admin") {
-                flair.css_class = "adminflair";
-              }
-              if ((user.type == "ama" && user.display_type === null) || user.display_type == "ama") {
-                flair.css_class = "amaflair";
-              }
-              if ((user.type == "bot" && user.display_type === null) || user.display_type == "bot") {
-                flair.css_class = "botflair";
-              }
-              if ((user.type == "global_mod" && user.display_type === null) || user.display_type == "global_mod") {
-                flair.css_class = "gmodflair";
-              }
-              if ((user.type == "helper" && user.display_type === null) || user.display_type == "helper") {
+              if (user.type == "helper" || user.display_type == "helper") {
                 flair.css_class = "helperflair";
               }
-              if ((user.type == "mod" && user.display_type === null) || user.display_type == "mod") {
+              if (user.type == "mod" || user.display_type == "mod") {
                 flair.css_class = "modflair";
               }
-              if ((user.type == "staff" && user.display_type === null) || user.display_type == "staff") {
+              if (user.type == "ama" || user.display_type == "ama") {
+                flair.css_class = "amaflair";
+              }
+              if (user.type == "bot" || user.display_type == "bot") {
+                flair.css_class = "botflair";
+              }
+              if (user.type == "global_mod" || user.display_type == "global_mod") {
+                flair.css_class = "gmodflair";
+              }
+              if (user.type == "admin" || user.display_type == "admin") {
+                flair.css_class = "adminflair";
+              }
+              if (user.type == "staff" || user.display_type == "staff") {
                 flair.css_class = "staffflair";
               }
             }
@@ -219,35 +246,40 @@ var discord = {
         if (member) {
           member.removeRoles(roles).then(function() {
             roles = [];
-            if (user.balance >= 1) {
-              roles.push(config.discord.bot.roles["1"]);
+            if (user.twitchdb === true) {
+              roles.push(config.discord.bot.roles["intro"]);
             }
-            if (user.balance >= 10) {
-              roles.push(config.discord.bot.roles["10"]);
-            }
-            if (user.balance >= 25) {
-              roles.push(config.discord.bot.roles["25"]);
-            }
-            if (user.balance >= 50) {
-              roles.push(config.discord.bot.roles["50"]);
-            }
-            if (user.balance >= 75) {
-              roles.push(config.discord.bot.roles["75"]);
-            }
-            if (user.balance >= 100) {
-              roles.push(config.discord.bot.roles["100"]);
-            }
-            if (user.balance >= 200) {
-              roles.push(config.discord.bot.roles["200"]);
-            }
-            if (user.balance >= 300) {
-              roles.push(config.discord.bot.roles["300"]);
-            }
-            if (user.balance >= 400) {
-              roles.push(config.discord.bot.roles["400"]);
-            }
-            if (user.balance >= 500) {
-              roles.push(config.discord.bot.roles["500"]);
+            else {
+              if (user.balance >= 1) {
+                roles.push(config.discord.bot.roles["1"]);
+              }
+              if (user.balance >= 10) {
+                roles.push(config.discord.bot.roles["10"]);
+              }
+              if (user.balance >= 25) {
+                roles.push(config.discord.bot.roles["25"]);
+              }
+              if (user.balance >= 50) {
+                roles.push(config.discord.bot.roles["50"]);
+              }
+              if (user.balance >= 75) {
+                roles.push(config.discord.bot.roles["75"]);
+              }
+              if (user.balance >= 100) {
+                roles.push(config.discord.bot.roles["100"]);
+              }
+              if (user.balance >= 200) {
+                roles.push(config.discord.bot.roles["200"]);
+              }
+              if (user.balance >= 300) {
+                roles.push(config.discord.bot.roles["300"]);
+              }
+              if (user.balance >= 400) {
+                roles.push(config.discord.bot.roles["400"]);
+              }
+              if (user.balance >= 500) {
+                roles.push(config.discord.bot.roles["500"]);
+              }
             }
             if (user.type == "mod" || user.display_type == "mod") {
               roles.push(config.discord.bot.roles.mods);
@@ -264,15 +296,22 @@ var discord = {
             if (user.type == "global_mod" || user.display_type == "global_mod") {
               roles.push(config.discord.bot.roles.global_mods);
             }
-            addRole(roles, 0, member);
-            resolve("success");
-          });
+            member.addRoles(roles).then(function() {
+              resolve("success");
+            }).catch(function(err) {
+              discord.setRole(user);
+            });
+          }).catch(function(err) {
+            discord.setRole(user);
+          });;
         }
         else {
           resolve("no_server");
         }
       }
-      resolve("not_found");
+      else {
+        resolve("not_found");
+      }
     });
   },
   clearRoles: (user) => {
@@ -295,16 +334,6 @@ var discord = {
     });
   }
 };
-
-function addRole(roles, index, member) {
-  if (roles[index]) {
-    member.addRole(roles[index]).then(function() {
-      if (roles.length - 1 > index) {
-        addRole(roles, index + 1, member);
-      }
-    });
-  }
-}
 
 client.login(config.discord.bot.token);
 
