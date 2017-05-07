@@ -1020,7 +1020,7 @@ cron.schedule('*/3 * * * * *', function() {
 						var re = new RegExp(" ", "g"),
 								title = data.data.children[0].data.title.replace(re, "+");
 						restler.get('https://www.reddit.com/r/Twitch/search.json?q=' + title + '&restrict_sr=on&limit=100&sort=new&t=all').on("complete", function(search) {
-							if (search.data && search.data.childen) {
+							if (search.data && search.data.children) {
 								var results = search.data.children,
 										j = 0,
 										posts = [];
@@ -1048,17 +1048,17 @@ cron.schedule('*/3 * * * * *', function() {
 									}
 									var comment = `Greetings ` + data.data.children[0].data.author + `,
 
-		As part of an attempt to cut back on the number of repetitive threads on /r/Twitch, we are trying to provide a short list of posts from Reddit's search function that may help you. The search found the following results for you:
+As part of an attempt to cut back on the number of repetitive threads on /r/Twitch, we are trying to provide a short list of posts from Reddit's search function that may help you. The search found the following results for you:
 
-		`
+`
 									for (var i in links) {
 										comment = comment + `- [` + links[i].title + `](` + links[i].link + `)
-		`
+`
 									}
 									comment = comment + `
-		We hope these links will be helpful. If so, consider deleting your post to reduce spam on the subreddit. If the suggested links are irrelvant to your question, feel free to ignore this comment and continue as you were.
+We hope these links will be helpful. If so, consider deleting your post to reduce spam on the subreddit. If the suggested links are irrelvant to your question, feel free to ignore this comment and continue as you were.
 
-		*I'm a bot and this action was performed automatically. If you have any questions or concerns, please contact the subreddit moderators via [modmail](https://www.reddit.com/message/compose?to=%2Fr%2FTwitch).*`
+*I'm a bot and this action was performed automatically. If you have any questions or concerns, please contact the subreddit moderators via [modmail](https://www.reddit.com/message/compose?to=%2Fr%2FTwitch).*`
 
 									helpers.reddit.comment("t3_" + data.data.children[0].data.id, comment).then(function() {
 										restler.get('https://www.reddit.com/user/' + config.reddit.bot.username  + "/comments.json?limit=1&sort=new").on('complete', function(account) {
