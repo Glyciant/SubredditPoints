@@ -50,12 +50,7 @@ var reddit = {
               text: text
             };
             if ((api.users[0].flair_text === null || api.users[0].flair_text.length === 0 || api.users[0].flair_text.length === "") && !text) {
-              if (user.balance > 0) {
-                flair.text = user.balance + " " + config.app.points;
-              }
-              else {
-                flair.text = "bleedPurple";
-              }
+              flair.text = "bleedPurple";
             }
             else if (!text) {
               flair.text = api.users[0].flair_text;
