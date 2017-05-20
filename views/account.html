@@ -10,6 +10,9 @@
 </div>
 <div class="row" style="margin: 10px;">
   <div id="accounts" class="col s12">
+    <div class="col s12 grey darken-3 center" style="border: 1px solid #e0e0e0; margin: 10px 0;">
+      <h4>You have {{ balance }} Twoos.</h4>
+    </div>
     <div class="col l4">
       <ul class="collection with-header">
         <li class="collection-header center grey darken-3"><img src="/img/reddit.png">
@@ -88,7 +91,7 @@
         {% endif %}
       </ul>
     </div>
-    <div class="col l12 grey darken-3" style="border: 1px solid #e0e0e0;">
+    <div class="col s12 grey darken-3" style="border: 1px solid #e0e0e0;">
       <h4 class="center">Flair Text & TwitchDB Flair</h4>
       {% if intro == "no_twitch" %}
         <p class="center">You must link your Twitch account to use TwitchDB.</p>

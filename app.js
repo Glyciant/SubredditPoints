@@ -97,7 +97,7 @@ app.get('/account/', function(req, res) {
 						else {
 							intro = twitchdb.message;
 						}
-						res.render('account', { title: "Account", data: data.transactions, flair: flair, intro: intro });
+						res.render('account', { title: "Account", data: data.transactions, balance: data.balance, flair: flair, intro: intro });
 					});
 				}
 				else {
@@ -739,7 +739,9 @@ client.on("guildMemberAdd", function(user) {
 						description: null,
 						mod_note: null
 					});
-					db.users.update(data.reddit_id, data);
+					Promise.all([helpers.reddit.setFlair(data, null), helpers.discord.setRole(data)]).then(function(response) {
+						db.users.update(data.reddit_id, data);
+					});
 				});
 			}
 		});
@@ -759,7 +761,9 @@ client.on("guildMemberRemove", function(user) {
 					description: null,
 					mod_note: null
 				});
-				db.users.update(data.reddit_id, data);
+				Promise.all([helpers.reddit.setFlair(data, null), helpers.discord.setRole(data)]).then(function(response) {
+					db.users.update(data.reddit_id, data);
+				});
 			}
 		});
 	}
@@ -776,7 +780,7 @@ cron.schedule('*/3 * * * * *', function() {
 		}
 		if (last_comment != data.data.children[0].data.id) {
 			last_comment = data.data.children[0].data.id;
-			if (data.data.children[0].data.body == "!nominate") {
+			if (data.data.children[0].data.body.split(" ")[0] == "!nominate") {
 				db.nominations.getByNominatorId(data.data.children[0].data.id).then(function(exists) {
 					if (!exists) {
 						var nomination = {
@@ -847,8 +851,10 @@ cron.schedule('*/3 * * * * *', function() {
 														description: "Nomination from " + nomination.nominator_username + " for comment at " + url.replace(".json",""),
 														mod_note: null
 													});
-													db.users.update(data.reddit_id, data).then(function() {
-														db.nominations.insert(nomination);
+													Promise.all([helpers.reddit.setFlair(data, null), helpers.discord.setRole(data)]).then(function(response) {
+														db.users.update(data.reddit_id, data).then(function() {
+															db.nominations.insert(nomination);
+														});
 													});
 												}
 											});
@@ -903,8 +909,10 @@ cron.schedule('*/3 * * * * *', function() {
 																}
 															]
 														};
-														db.users.insert(data).then(function() {
-															db.nominations.insert(nomination);
+														Promise.all([helpers.reddit.setFlair(data, null), helpers.discord.setRole(data)]).then(function(response) {
+															db.users.insert(data).then(function() {
+																db.nominations.insert(nomination);
+															});
 														});
 													});
 												}
@@ -918,8 +926,10 @@ cron.schedule('*/3 * * * * *', function() {
 														description: "Nomination from " + nomination.nominator_username + " for post at " + url.replace(".json",""),
 														mod_note: null
 													});
-													db.users.update(data.reddit_id, data).then(function() {
-														db.nominations.insert(nomination);
+													Promise.all([helpers.reddit.setFlair(data, null), helpers.discord.setRole(data)]).then(function(response) {
+														db.users.update(data.reddit_id, data).then(function() {
+															db.nominations.insert(nomination);
+														});
 													});
 												}
 											});
@@ -957,7 +967,9 @@ cron.schedule('*/3 * * * * *', function() {
 										description: "Contest submission at " + url.replace(".json",""),
 										mod_note: null
 									});
-									db.users.update(response.reddit_id, response);
+									Promise.all([helpers.reddit.setFlair(response, null), helpers.discord.setRole(response)]).then(function() {
+										db.users.update(response.reddit_id, response);
+									});
 								}
 								else {
 									restler.get('https://www.reddit.com/user/' + data.data.children[0].data.author + "/about.json").on('complete', function(account) {
@@ -993,7 +1005,9 @@ cron.schedule('*/3 * * * * *', function() {
 												}
 											]
 										};
-										db.users.insert(data);
+										Promise.all([helpers.reddit.setFlair(data, null), helpers.discord.setRole(data)]).then(function() {
+											db.users.insert(data);
+										});
 									});
 								}
 							});
@@ -1006,72 +1020,78 @@ cron.schedule('*/3 * * * * *', function() {
 });
 
 // Check Reddit API for new posts
+var processed = [];
 cron.schedule('*/3 * * * * *', function() {
 	restler.get('https://www.reddit.com/r/Twitch/new.json?limit=1').on("complete", function(data) {
-		restler.get(data.data.children[0].data.url + ".json").on("complete", function(exists) {
-			if (exists) {
-				for (var k in exists[1].data.children) {
-					if (exists[1].data.children[k].data.author == config.reddit.bot.username) {
-						return;
+		if (processed.indexOf(data.data.children[0].data.id) === -1) {
+			processed.push(data.data.children[0].data.id);
+			restler.get(data.data.children[0].data.url + ".json").on("complete", function(exists) {
+				if (exists) {
+					for (var k in exists[1].data.children) {
+						if (exists[1].data.children[k].data.author == config.reddit.bot.username) {
+							return;
+						}
 					}
-				}
-				db.users.getByRedditUsername(data.data.children[0].data.author.toLowerCase()).then(function(user) {
-					if (!user || user.type == "user") {
-						var re = new RegExp(" ", "g"),
-								title = data.data.children[0].data.title.replace(re, "+");
-						restler.get('https://www.reddit.com/r/Twitch/search.json?q=' + title + '&restrict_sr=on&limit=100&sort=new&t=all').on("complete", function(search) {
-							if (search.data && search.data.children) {
-								var results = search.data.children,
-										j = 0,
-										posts = [];
-										links = [];
-
-								for (var m in results) {
-									if (data.data.children[0].data.id != results[m].data.id) {
-										var difference = distance(stopword.removeStopwords(data.data.children[0].data.title.replace(/[^\w\s]/gi, '').split(" ")).join(" "), stopword.removeStopwords(results[m].data.title.replace(/[^\w\s]/gi, '').split(" ")).join(" "), { caseSensitive: false });
-										if (difference >= 0.6) {
-											posts.push({ title: results[m].data.title, link: results[m].data.url, distance: difference });
+					db.users.getByRedditUsername(data.data.children[0].data.author.toLowerCase()).then(function(user) {
+						if (!user || user.type == "user") {
+							var re = new RegExp(" ", "g"),
+									title = data.data.children[0].data.title.replace(re, "+");
+							restler.get('https://www.reddit.com/r/Twitch/search.json?q=' + title + '&restrict_sr=on&limit=100&sort=new&t=all').on("complete", function(search) {
+								if (search.data && search.data.children) {
+									var results = search.data.children,
+											j = 0,
+											posts = [],
+											links = [];
+									for (var m in results) {
+										if (data.data.children[0].data.id != results[m].data.id) {
+											var difference = distance(stopword.removeStopwords(data.data.children[0].data.title.replace(/[^\w\s]/gi, '').split(" ")).join(" "), stopword.removeStopwords(results[m].data.title.replace(/[^\w\s]/gi, '').split(" ")).join(" "), { caseSensitive: false });
+											if (difference >= 0.6) {
+												posts.push({ title: results[m].data.title, link: results[m].data.url, distance: difference });
+											}
 										}
 									}
-								}
-								if (posts.length > 0) {
-									posts.sort(function(a, b) {
-									  return parseFloat(a.distance) - parseFloat(b.distance);
-									});
-									posts.reverse();
-									for (var i in posts) {
-										if (j > 4) {
-											break;
+									if (posts.length > 0) {
+										posts.sort(function(a, b) {
+										  return parseFloat(a.distance) - parseFloat(b.distance);
+										});
+										posts.reverse();
+										for (var i in posts) {
+											if (j > 4) {
+												break;
+											}
+											j++;
+											links.push({ title: posts[i].title, link: posts[i].link });
 										}
-										j++;
-										links.push({ title: posts[i].title, link: posts[i].link });
-									}
-									var comment = `Greetings ` + data.data.children[0].data.author + `,
+										var comment = `Greetings ` + data.data.children[0].data.author + `,
 
 As part of an attempt to cut back on the number of repetitive threads on /r/Twitch, we are trying to provide a short list of posts from Reddit's search function that may help you. The search found the following results for you:
 
 `
-									for (var i in links) {
-										comment = comment + `- [` + links[i].title + `](` + links[i].link + `)
+										for (var i in links) {
+											comment = comment + `- [` + links[i].title + `](` + links[i].link + `)
 `
-									}
-									comment = comment + `
+										}
+										comment = comment + `
 We hope these links will be helpful. If so, consider deleting your post to reduce spam on the subreddit. If the suggested links are irrelvant to your question, feel free to ignore this comment and continue as you were.
 
 *I'm a bot and this action was performed automatically. If you have any questions or concerns, please contact the subreddit moderators via [modmail](https://www.reddit.com/message/compose?to=%2Fr%2FTwitch).*`
-
-									helpers.reddit.comment("t3_" + data.data.children[0].data.id, comment).then(function() {
-										restler.get('https://www.reddit.com/user/' + config.reddit.bot.username  + "/comments.json?limit=1&sort=new").on('complete', function(account) {
-											helpers.reddit.distinguish("t1_" + account.data.children[0].data.id);
+										helpers.reddit.comment("t3_" + data.data.children[0].data.id, comment).then(function() {
+											restler.get('https://www.reddit.com/user/' + config.reddit.bot.username  + "/comments.json?limit=1&sort=new").on('complete', function(account) {
+												helpers.reddit.distinguish("t1_" + account.data.children[0].data.id).then(function() {
+													helpers.reddit.report("t3_" + data.data.children[0].data.id, "Possible Repetitive Thread").then(function() {
+														helpers.reddit.remove("t1_" + account.data.children[0].data.id);
+													});
+												});
+											});
 										});
-									});
+									}
 								}
-							}
-						});
-					}
-				});
-			}
-		});
+							});
+						}
+					});
+				}
+			});
+		}
 	});
 });
 
@@ -1093,7 +1113,7 @@ function getCommunityStreams(offset)	{
   });
 }
 
-cron.schedule('* */15 * * * *', function() {
+cron.schedule('0 */15 * * * *', function() {
 	getCommunityStreams(0);
 });
 

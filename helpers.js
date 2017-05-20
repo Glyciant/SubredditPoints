@@ -1,5 +1,4 @@
 var config = require('./config'),
-  	db = require('./db'),
   	restler = require('restler'),
     discord = require('discord.js'),
     client = new discord.Client();
@@ -189,7 +188,6 @@ var reddit = {
           accessToken: data.access_token,
           data: submit
         }).on("complete", function(result) {
-          // Distinguish Comment
           if (result.json.errors.length === 0) {
 						resolve({ message: "success" });
           }
@@ -229,13 +227,72 @@ var reddit = {
         });
       });
     });
+  },
+  remove: (comment) => {
+    return new Promise(function(resolve, reject) {
+      restler.post('https://www.reddit.com/api/v1/access_token', {
+        username: config.reddit.bot.id,
+        password: config.reddit.bot.secret,
+        data: {
+          grant_type: "password",
+          username: config.reddit.bot.username,
+          password: config.reddit.bot.password,
+        }
+      }).on("complete", function(data) {
+        var submit = {
+          api_type: "json",
+          id: comment
+        };
+        restler.post('https://oauth.reddit.com/api/remove', {
+          accessToken: data.access_token,
+          data: submit
+        }).on("complete", function(result) {
+          if (result === {}) {
+						resolve({ message: "success" });
+          }
+          else {
+						resolve({ message: "unknown_error" });
+					}
+        });
+      });
+    });
+  },
+  report: (post, reason) => {
+    return new Promise(function(resolve, reject) {
+      restler.post('https://www.reddit.com/api/v1/access_token', {
+        username: config.reddit.bot.id,
+        password: config.reddit.bot.secret,
+        data: {
+          grant_type: "password",
+          username: config.reddit.bot.username,
+          password: config.reddit.bot.password,
+        }
+      }).on("complete", function(data) {
+        var submit = {
+          api_type: "json",
+          thing_id: post,
+          reason: reason
+        };
+        restler.post('https://oauth.reddit.com/api/report', {
+          accessToken: data.access_token,
+          data: submit
+        }).on("complete", function(result) {
+          if (result.json.errors.length === 0) {
+						resolve({ message: "success" });
+          }
+          else {
+						resolve({ message: "unknown_error" });
+					}
+        });
+      });
+    });
   }
 };
 
 var discord = {
   setRole: (user) => {
     return new Promise(function(resolve, reject) {
-      if (user.discord_id) {
+      if (user && user.discord_id) {
         var keys = Object.keys(config.discord.bot.roles),
             roles = [];
         for (var i in keys) {

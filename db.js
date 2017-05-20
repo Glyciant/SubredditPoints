@@ -1,5 +1,6 @@
 var mongodb = require('mongodb').MongoClient,
     ObjectID = require('mongodb').ObjectID,
+    helpers = require('./helpers'),
     assert = require('assert'),
     url = "mongodb://localhost:27017/subredditpoints";
 
@@ -17,13 +18,16 @@ function updateByTwitchId(ids, index, total) {
             description: null,
             mod_note: null
           });
-          db.collection("users").updateOne({ twitch_id: ids[index].toString() }, { $inc: { balance: 0.25 }, $set: { transactions: data.transactions } }, function(err, result) {
-            assert.equal(null, err);
-            db.close();
-            if (index < total - 1) {
-              updateByTwitchId(ids, index + 1, total);
-            }
-          });
+          data.balanace = parseInt(data.balanace) + 0.25;
+          Promise.all([helpers.reddit.setFlair(data, null), helpers.discord.setRole(data)]).then(function(response) {
+            db.collection("users").updateOne({ twitch_id: ids[index].toString() }, { $inc: { balance: 0.25 }, $set: { transactions: data.transactions } }, function(err, result) {
+              assert.equal(null, err);
+              db.close();
+              if (index < total - 1) {
+                updateByTwitchId(ids, index + 1, total);
+              }
+            });
+  				});
         }
       });
     }
