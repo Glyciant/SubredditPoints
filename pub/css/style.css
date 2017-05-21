@@ -43,6 +43,11 @@ input:not([type]):focus:not([readonly]), input[type=text]:focus:not([readonly]),
 	background-color: #6441A5;
 }
 
+[type="radio"]:checked+label:after {
+	background-color: #B9A3E3;
+	border: 2px solid #B9A3E3;
+}
+
 /* Admin Button Colours */
 #admin-approve:hover, #admin-reject:hover {
 	color: #B9A3E3 !important;

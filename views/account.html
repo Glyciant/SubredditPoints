@@ -106,15 +106,41 @@
       {% elseif intro == "rejected" %}
         <p class="center">Your intro was rejected on TwitchDB.</p>
       {% elseif intro == "approved" %}
-        <p class="center">Your intro was approved on TwitchDB. You may use the TwitchDB intro flair and instead of Twoos.</p>
-        <div class="switch center" style="margin-bottom: 15px;">
-          <label style="color: #fff;">
-            Use Twoos Flair
-            <input type="checkbox" id="twitchdb">
-            <span class="lever"></span>
-            Use TwitchDB Flair
-          </label>
-        </div>
+        <p class="center">Your intro was approved on TwitchDB. You may use the TwitchDB intro flairs and instead of Twoos.</p>
+        <form class="col s12" id="choose-flair">
+          <div class="col s6">
+            <p>
+              <input name="flair-type" type="radio" id="flair-twoos" {% if !choice || choice == "twoos" %}checked{% endif %} />
+              <label for="flair-twoos" class="white-text">Twoos</label>
+            </p>
+            <p>
+              <input name="flair-type" type="radio" id="flair-broadcaster" {% if choice == "broadcaster" %}checked{% endif %} />
+              <label for="flair-broadcaster" class="white-text">Broadcaster</label>
+            </p>
+            <p>
+              <input name="flair-type" type="radio" id="flair-creative" {% if choice == "creative" %}checked{% endif %} />
+              <label for="flair-creative" class="white-text">Creative</label>
+            </p>
+            <p>
+              <input name="flair-type" type="radio" id="flair-gaming" {% if choice == "gaming" %}checked{% endif %} />
+              <label for="flair-gaming" class="white-text">Gaming</label>
+            </p>
+          </div>
+          <div class="col s6">
+            <p>
+              <input name="flair-type" type="radio" id="flair-irl" {% if choice == "irl" %}checked{% endif %} />
+              <label for="flair-irl" class="white-text">IRL</label>
+            </p>
+            <p>
+              <input name="flair-type" type="radio" id="flair-music" {% if choice == "music" %}checked{% endif %} />
+              <label for="flair-music" class="white-text">Music</label>
+            </p>
+            <p>
+              <input name="flair-type" type="radio" id="flair-eating" {% if choice == "eating" %}checked{% endif %} />
+              <label for="flair-eating" class="white-text">Social Eating</label>
+            </p>
+          </div>
+        </form>
       {% endif %}
       <div class="input-field col s6">
         <input id="flair-text" type="text" value="{{ flair }}" data-length="40">
@@ -147,7 +173,7 @@
             {% else %}
               <td>-</td>
             {% endif %}
-            <td>{{ record.difference }}</td>
+            <td>{{ record.difference }}{% if record.combined %}*{% endif %}</td>
           </tr>
         {% endfor %}
       </tbody>

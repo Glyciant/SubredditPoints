@@ -55,7 +55,7 @@ var reddit = {
             else if (!text) {
               flair.text = api.users[0].flair_text;
             }
-            if (user.type == "user" || user.display_type == "user") {
+            if ((user.display_type === null && user.type == "user") || user.display_type == "user") {
               if (user.balance >= 1) {
                 flair.css_class = "bits-1";
               }
@@ -86,30 +86,42 @@ var reddit = {
               if (user.balance >= 500) {
                 flair.css_class = "bits-500";
               }
-              if (user.twitchdb === true) {
+              if (user.flair === "broadcaster") {
                 flair.css_class = "introflair";
+              }
+              if (user.flair === "creative") {
+                flair.css_class = "creativeflair";
+              }
+              if (user.flair === "irl") {
+                flair.css_class = "irlflair";
+              }
+              if (user.flair === "music") {
+                flair.css_class = "musicflair";
+              }
+              if (user.flair === "eating") {
+                flair.css_class = "eatingflair";
               }
             }
             else {
-              if (user.type == "helper" || user.display_type == "helper") {
+              if ((user.display_type === null && user.type == "helper") || user.display_type == "helper") {
                 flair.css_class = "helperflair";
               }
-              if (user.type == "mod" || user.display_type == "mod") {
+              if ((user.display_type === null && user.type == "mod") || user.display_type == "mod") {
                 flair.css_class = "modflair";
               }
-              if (user.type == "ama" || user.display_type == "ama") {
+              if ((user.display_type === null && user.type == "ama") || user.display_type == "ama") {
                 flair.css_class = "amaflair";
               }
-              if (user.type == "bot" || user.display_type == "bot") {
+              if ((user.display_type === null && user.type == "bot") || user.display_type == "bot") {
                 flair.css_class = "botflair";
               }
-              if (user.type == "global_mod" || user.display_type == "global_mod") {
+              if ((user.display_type === null && user.type == "global_mod") || user.display_type == "global_mod") {
                 flair.css_class = "gmodflair";
               }
-              if (user.type == "admin" || user.display_type == "admin") {
+              if ((user.display_type === null && user.type == "admin") || user.display_type == "admin") {
                 flair.css_class = "adminflair";
               }
-              if (user.type == "staff" || user.display_type == "staff") {
+              if ((user.display_type === null && user.type == "staff") || user.display_type == "staff") {
                 flair.css_class = "staffflair";
               }
             }
@@ -298,8 +310,23 @@ var discord = {
         if (member) {
           member.removeRoles(roles).then(function() {
             roles = [];
-            if (user.twitchdb === true) {
+            if (user.flair == "broadcaster") {
               roles.push(config.discord.bot.roles["intro"]);
+            }
+            else if (user.flair == "creative") {
+              roles.push(config.discord.bot.roles["creative"]);
+            }
+            else if (user.flair == "gaming") {
+              roles.push(config.discord.bot.roles["gaming"]);
+            }
+            else if (user.flair == "irl") {
+              roles.push(config.discord.bot.roles["irl"]);
+            }
+            else if (user.flair == "music") {
+              roles.push(config.discord.bot.roles["music"]);
+            }
+            else if (user.flair == "eating") {
+              roles.push(config.discord.bot.roles["eating"]);
             }
             else {
               if (user.balance >= 1) {

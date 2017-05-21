@@ -87,6 +87,35 @@ app.get('/faq/', function(req, res) {
 app.get('/account/', function(req, res) {
 	if (req.session.reddit) {
 		db.users.getByRedditUsername(req.session.reddit.name.toLowerCase()).then(function(data) {
+			var transactions = [];
+					j = {};
+			data.transactions = data.transactions.reverse()
+			for (var i in data.transactions) {
+				if (!j.title) {
+					j = data.transactions[i];
+					j.combined = false;
+					if (data.transactions[i + 1]) {
+						if (data.transactions[i].title !== data.transactions[i + 1].title) {
+							transactions.push(j);
+							j = {};
+						}
+					}
+					else {
+						transactions.push(j);
+						j = {};
+					}
+					continue;
+
+				}
+				if (data.transactions[i].title == j.title) {
+					j.difference = j.difference + data.transactions[i].difference;
+					j.combined = true;
+				}
+				else {
+					transactions.push(j);
+					j = {};
+				}
+			}
 			helpers.reddit.getFlair(req.session.reddit.name).then(function(flair) {
 				if (data.twitch_id) {
 					restler.get('http://www.twitchdb.tv/api/intro/status/' + data.twitch_id).on('complete', function(twitchdb) {
@@ -97,11 +126,11 @@ app.get('/account/', function(req, res) {
 						else {
 							intro = twitchdb.message;
 						}
-						res.render('account', { title: "Account", data: data.transactions, balance: data.balance, flair: flair, intro: intro });
+						res.render('account', { title: "Account", data: transactions, balance: data.balance, flair: flair, intro: intro, choice: data.flair });
 					});
 				}
 				else {
-					res.render('account', { title: "Account", data: data.transactions, flair: flair, intro: "no_twitch" });
+					res.render('account', { title: "Account", data: transactions, flair: flair, intro: "no_twitch", choice: data.flair });
 				}
 			});
 		});
@@ -224,7 +253,7 @@ app.get('/auth/login/reddit/', function(req, res) {
 								discord_id: null,
 								discord_name: null,
 								type: "user",
-								twitchdb: false,
+								flair: twoo,
 								bio: null,
 								balance: 0,
 								display_type: null,
@@ -533,7 +562,7 @@ app.post('/users/update/twitchdb/', function(req, res) {
 			res.send({ message: "not_found" });
 		}
 		else {
-			data.twitchdb = (req.body.twitchdb == "true");
+			data.flair = req.body.flair;
 			db.users.update(data.reddit_id, data).then(function() {
 				Promise.all([helpers.reddit.setFlair(data, req.body.text), helpers.discord.setRole(data)]).then(function(response) {
 					res.send({ message: "success", data: data });
@@ -813,7 +842,7 @@ cron.schedule('*/3 * * * * *', function() {
 															discord_id: null,
 															discord_name: null,
 															type: "user",
-															twitchdb: false,
+															flair: twoo,
 															bio: null,
 															balance: 1,
 															display_type: null,
@@ -886,7 +915,7 @@ cron.schedule('*/3 * * * * *', function() {
 															discord_id: null,
 															discord_name: null,
 															type: "user",
-															twitchdb: false,
+															flair: twoo,
 															bio: null,
 															balance: 1,
 															display_type: null,
@@ -982,7 +1011,7 @@ cron.schedule('*/3 * * * * *', function() {
 											discord_id: null,
 											discord_name: null,
 											type: "user",
-											twitchdb: false,
+											flair: twoo,
 											bio: null,
 											balance: 1,
 											display_type: null,
