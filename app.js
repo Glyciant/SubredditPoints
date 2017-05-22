@@ -86,54 +86,59 @@ app.get('/faq/', function(req, res) {
 
 app.get('/account/', function(req, res) {
 	if (req.session.reddit) {
-		db.users.getByRedditUsername(req.session.reddit.name.toLowerCase()).then(function(data) {
-			var transactions = [];
-					j = {};
-			data.transactions = data.transactions.reverse()
-			for (var i in data.transactions) {
-				if (!j.title) {
-					j = data.transactions[i];
-					j.combined = false;
-					if (data.transactions[i + 1]) {
-						if (data.transactions[i].title !== data.transactions[i + 1].title) {
+		if (req.session.reddit.name) {
+			db.users.getByRedditUsername(req.session.reddit.name.toLowerCase()).then(function(data) {
+				var transactions = [];
+						j = {};
+				data.transactions = data.transactions.reverse()
+				for (var i in data.transactions) {
+					if (!j.title) {
+						j = data.transactions[i];
+						j.combined = false;
+						if (data.transactions[i + 1]) {
+							if (data.transactions[i].title !== data.transactions[i + 1].title) {
+								transactions.push(j);
+								j = {};
+							}
+						}
+						else {
 							transactions.push(j);
 							j = {};
 						}
+						continue;
+
+					}
+					if (data.transactions[i].title == j.title) {
+						j.difference = j.difference + data.transactions[i].difference;
+						j.combined = true;
 					}
 					else {
 						transactions.push(j);
 						j = {};
 					}
-					continue;
-
 				}
-				if (data.transactions[i].title == j.title) {
-					j.difference = j.difference + data.transactions[i].difference;
-					j.combined = true;
-				}
-				else {
-					transactions.push(j);
-					j = {};
-				}
-			}
-			helpers.reddit.getFlair(req.session.reddit.name).then(function(flair) {
-				if (data.twitch_id) {
-					restler.get('http://www.twitchdb.tv/api/intro/status/' + data.twitch_id).on('complete', function(twitchdb) {
-						var intro;
-						if (twitchdb.message == "has_intro") {
-							intro = twitchdb.intro_status;
-						}
-						else {
-							intro = twitchdb.message;
-						}
-						res.render('account', { title: "Account", data: transactions, balance: data.balance, flair: flair, intro: intro, choice: data.flair });
-					});
-				}
-				else {
-					res.render('account', { title: "Account", data: transactions, flair: flair, intro: "no_twitch", choice: data.flair });
-				}
+				helpers.reddit.getFlair(req.session.reddit.name).then(function(flair) {
+					if (data.twitch_id) {
+						restler.get('http://www.twitchdb.tv/api/intro/status/' + data.twitch_id).on('complete', function(twitchdb) {
+							var intro;
+							if (twitchdb.message == "has_intro") {
+								intro = twitchdb.intro_status;
+							}
+							else {
+								intro = twitchdb.message;
+							}
+							res.render('account', { title: "Account", data: transactions, balance: data.balance, flair: flair, intro: intro, choice: data.flair });
+						});
+					}
+					else {
+						res.render('account', { title: "Account", data: transactions, flair: flair, intro: "no_twitch", choice: data.flair });
+					}
+				});
 			});
-		});
+		}
+		else {
+			res.render("error", { title: "403 Error", code: "403", message: "Your account data could not be accessed." });
+		}
 	}
 	else {
 		res.redirect("/");
@@ -242,40 +247,45 @@ app.get('/auth/login/reddit/', function(req, res) {
 					req.session.reddit.id = finaldata.id;
 					req.session.reddit.name = finaldata.name;
 					req.session.reddit.auth = data.access_token;
-					db.users.getByRedditId(req.session.reddit.id).then(function(data) {
-						if (!data) {
-							var data = {
-								reddit_id: req.session.reddit.id,
-								reddit_username: req.session.reddit.name.toLowerCase(),
-								reddit_name: req.session.reddit.name,
-								twitch_id: null,
-								twitch_name: null,
-								discord_id: null,
-								discord_name: null,
-								type: "user",
-								flair: twoo,
-								bio: null,
-								balance: 0,
-								display_type: null,
-								transactions: [
-									{
-										timestamp: Date.now(),
-										difference: 0,
-										from: "System",
-										title: "Account Created",
-										description: null,
-										mod_note: null
-									}
-								]
-							};
-							db.users.insert(data).then(function() {
+					if (req.session.reddit.name) {
+						db.users.getByRedditId(req.session.reddit.id).then(function(data) {
+							if (!data) {
+								var data = {
+									reddit_id: req.session.reddit.id,
+									reddit_username: req.session.reddit.name.toLowerCase(),
+									reddit_name: req.session.reddit.name,
+									twitch_id: null,
+									twitch_name: null,
+									discord_id: null,
+									discord_name: null,
+									type: "user",
+									flair: "twoo",
+									bio: null,
+									balance: 0,
+									display_type: null,
+									transactions: [
+										{
+											timestamp: Date.now(),
+											difference: 0,
+											from: "System",
+											title: "Account Created",
+											description: null,
+											mod_note: null
+										}
+									]
+								};
+								db.users.insert(data).then(function() {
+									res.redirect('/account/');
+								});
+							}
+							else {
 								res.redirect('/account/');
-							});
-						}
-						else {
-							res.redirect('/account/');
-						}
-					});
+							}
+						});
+					}
+					else {
+						res.render("error", { title: "403 Error", code: "403", message: "Your account data could not be accessed." });
+					}
 				});
 			});
 		}
@@ -842,7 +852,7 @@ cron.schedule('*/3 * * * * *', function() {
 															discord_id: null,
 															discord_name: null,
 															type: "user",
-															flair: twoo,
+															flair: "twoo",
 															bio: null,
 															balance: 1,
 															display_type: null,
@@ -915,7 +925,7 @@ cron.schedule('*/3 * * * * *', function() {
 															discord_id: null,
 															discord_name: null,
 															type: "user",
-															flair: twoo,
+															flair: "twoo",
 															bio: null,
 															balance: 1,
 															display_type: null,
@@ -1011,7 +1021,7 @@ cron.schedule('*/3 * * * * *', function() {
 											discord_id: null,
 											discord_name: null,
 											type: "user",
-											flair: twoo,
+											flair: "twoo",
 											bio: null,
 											balance: 1,
 											display_type: null,

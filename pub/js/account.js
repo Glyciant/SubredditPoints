@@ -2,7 +2,7 @@ $(document).delegate("#update-flair", "click", function() {
   var username = $(this).data("username"),
       flair = $("#choose-flair input[type='radio']:checked").attr("id").replace("flair-", ""),
       text = $("#flair-text").val();
-
+      
   $.post("/users/get/session", { username: username }, function(check) {
     if (check === true) {
       $.post("/users/update/twitchdb/", {
