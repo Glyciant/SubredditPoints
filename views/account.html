@@ -1,8 +1,8 @@
 {% include "./header.html" %}
 
-<div class="row" style="margin: 10px;">
+<div class="row grey darken-3 container-shadow" style="margin: 10px;">
   <div class="col s12">
-    <ul class="tabs grey darken-4 tabs-fixed-width" style="overflow: hidden;">
+    <ul class="tabs grey darken-3 tabs-fixed-width" style="overflow: hidden;">
       <li class="tab col s6"><a href="#accounts">Linked Accounts</a></li>
       <li class="tab col s6"><a href="#transactions">Transactions</a></li>
     </ul>
@@ -10,12 +10,12 @@
 </div>
 <div class="row" style="margin: 10px;">
   <div id="accounts" class="col s12">
-    <div class="col s12 grey darken-3 center" style="border: 1px solid #e0e0e0; margin: 10px 0;">
+    <div class="col s12 grey darken-3 center container-shadow" style="margin: 10px 0;">
       <h4>You have {{ balance }} Twoos.</h4>
     </div>
     <div class="col l4">
-      <ul class="collection with-header">
-        <li class="collection-header center grey darken-3"><img src="/img/reddit.png">
+      <ul class="collection with-header" style="border: none;">
+        <li class="collection-header center grey darken-3 container-shadow"><img src="/img/reddit.png">
         <h4>Reddit</h4></li>
         {% if reddit.id %}
           <li class="collection-item grey darken-3"><h5 class="center">Linked</h5></li>
@@ -40,8 +40,8 @@
       </ul>
     </div>
     <div class="col l4">
-      <ul class="collection with-header">
-        <li class="collection-header center grey darken-3"><img src="/img/twitch.png">
+      <ul class="collection with-header" style="border: none;">
+        <li class="collection-header center grey darken-3 container-shadow"><img src="/img/twitch.png">
         <h4>Twitch</h4></li>
         {% if twitch.id %}
           <li class="collection-item grey darken-3"><h5 class="center">Linked</h5></li>
@@ -66,8 +66,8 @@
       </ul>
     </div>
     <div class="col l4">
-      <ul class="collection with-header">
-        <li class="collection-header center grey darken-3"><img src="/img/discord.png">
+      <ul class="collection with-header" style="border: none;">
+        <li class="collection-header center grey darken-3 container-shadow"><img src="/img/discord.png">
         <h4>Discord</h4></li>
         {% if discord.id %}
           <li class="collection-item grey darken-3"><h5 class="center">Linked</h5></li>
@@ -91,7 +91,7 @@
         {% endif %}
       </ul>
     </div>
-    <div class="col s12 grey darken-3" style="border: 1px solid #e0e0e0;">
+    <div class="col s12 grey darken-3 container-shadow">
       <h4 class="center">Flair Text & TwitchDB Flair</h4>
       {% if intro == "no_twitch" %}
         <p class="center">You must link your Twitch account to use TwitchDB.</p>
@@ -107,7 +107,7 @@
         <p class="center">Your intro was rejected on TwitchDB.</p>
       {% elseif intro == "approved" %}
         <p class="center">Your intro was approved on TwitchDB. You may use the TwitchDB intro flairs and instead of Twoos.</p>
-        <form class="col s12" id="choose-flair">
+        <form class="col s12" id="choose-flair" data-initial="{{ choice }}" data-type="{{ type }}" data-balance="{{ balance }}">
           <div class="col s6">
             <p>
               <input name="flair-type" type="radio" id="flair-twoos" {% if !choice || choice == "twoos" %}checked{% endif %} />
@@ -149,9 +149,12 @@
       <div class="col s6">
         <a id="update-flair" href="#" class="btn waves-effect waves-purple grey darken-2 white-text" data-username="{{ reddit.name }}" style="margin-top: 15px; width: 100%;">Update</a>
       </div>
+      <div class="col s12 center">
+        <p><a href="https://www.reddit.com/r/Twitch/wiki/subreddit/flairs" target="_blank">Click here to see what the flairs look like on /r/Twitch!</a>
+      </div>
     </div>
   </div>
-  <div id="transactions" class="col s12">
+  <div id="transactions" class="col s12 grey darken-3 container-shadow">
     <table>
       <thead>
         <th>ID</th>
@@ -163,18 +166,47 @@
       </thead>
       <tbody>
         {% for record in data %}
-          <tr>
-            <td>{{ record.timestamp }}</td>
-            <td>{{ record.timestamp|date("d/m/Y") }}</td>
-            <td>{{ record.from }}</td>
-            <td>{{ record.title }}</td>
-            {% if record.description %}
-              <td>{{ record.description }}</td>
-            {% else %}
-              <td>-</td>
-            {% endif %}
-            <td>{{ record.difference }}{% if record.combined %}*{% endif %}</td>
-          </tr>
+          {% if record.length === 1 %}
+            <tr>
+              <td>{{ record[0].timestamp }}</td>
+              <td>{{ record[0].timestamp|date("d/m/Y") }}</td>
+              <td>{{ record[0].from }}</td>
+              <td>{{ record[0].title }}</td>
+              {% if record[0].description %}
+                <td>{{ record[0].description }}</td>
+              {% else %}
+                <td>-</td>
+              {% endif %}
+              <td>{{ record[0].difference }}</td>
+            </tr>
+          {% else %}
+            <tr id="group-header" data-id="{{ record[0].timestamp }}">
+              <td id="id-field"><i class="fa fa-chevron-right" aria-hidden="true"></i></td>
+              <td>{{ record[0].timestamp|date("d/m/Y") }}</td>
+              <td>{{ record[0].from }}</td>
+              <td>{{ record[0].title }}</td>
+              <td>List of Transactions</td>
+              {% set difference = 0 %}
+              {% for transactions in record %}
+                {% set difference += transactions.difference %}
+              {% endfor %}
+              <td>{{ difference }}</td>
+            </tr>
+            {% for transactions in record %}
+              <tr class="group-data-{{ record[0].timestamp }}" style="display: none;">
+                <td>{{ transactions.timestamp }}</td>
+                <td>{{ transactions.timestamp|date("d/m/Y") }}</td>
+                <td>{{ transactions.from }}</td>
+                <td>{{ transactions.title }}</td>
+                {% if transactions.description %}
+                  <td>{{ transactions.description }}</td>
+                {% else %}
+                  <td>-</td>
+                {% endif %}
+                <td>{{ transactions.difference }}</td>
+              </tr>
+            {% endfor %}
+          {% endif %}
         {% endfor %}
       </tbody>
     </table>

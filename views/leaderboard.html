@@ -1,0 +1,28 @@
+{% include "./header.html" %}
+
+<div class="row grey darken-3 container-shadow" style="margin-top: 10px;">
+  <div class="col s12">
+    <table>
+      <thead>
+        <th>Rank</th>
+        <th>Reddit Name</th>
+        <th>Twitch Name</th>
+        <th>Discord Name</th>
+        <th>Total</th>
+      </thead>
+      <tbody>
+        {% for user in data %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ user.reddit_name }}</td>
+          <td>{% if user.twitch_name %}{{ user.twitch_name }}{% else %}-{% endif %}</td>
+          <td>{% if user.discord_name %}{{ user.discord_name }}{% else %}-{% endif %}</td>
+          <td>{{ user.balance }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% include "./footer.html" %}

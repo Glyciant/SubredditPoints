@@ -45,6 +45,7 @@ app.get('*', function(req, res, next) {
 				if (data.type == "mod") {
 					res.locals.mod = true;
 				}
+				res.locals.type = data.display_type;
 				if (data.twitch_id) {
 					res.locals.twitch = {
 						id: data.twitch_id,
@@ -88,35 +89,24 @@ app.get('/account/', function(req, res) {
 	if (req.session.reddit) {
 		if (req.session.reddit.name) {
 			db.users.getByRedditUsername(req.session.reddit.name.toLowerCase()).then(function(data) {
-				var transactions = [];
-						j = {};
 				data.transactions = data.transactions.reverse()
+				var transactions = [],
+						j = [];
 				for (var i in data.transactions) {
-					if (!j.title) {
-						j = data.transactions[i];
-						j.combined = false;
-						if (data.transactions[i + 1]) {
-							if (data.transactions[i].title !== data.transactions[i + 1].title) {
-								transactions.push(j);
-								j = {};
-							}
-						}
-						else {
-							transactions.push(j);
-							j = {};
-						}
+					if (!j[0]) {
+						j.push(data.transactions[i])
 						continue;
-
 					}
-					if (data.transactions[i].title == j.title) {
-						j.difference = j.difference + data.transactions[i].difference;
-						j.combined = true;
+					if (j[0].title == data.transactions[i].title) {
+						j.push(data.transactions[i]);
 					}
 					else {
 						transactions.push(j);
-						j = {};
+						j = [];
+						j.push(data.transactions[i]);
 					}
 				}
+				transactions.push(j);
 				helpers.reddit.getFlair(req.session.reddit.name).then(function(flair) {
 					if (data.twitch_id) {
 						restler.get('http://www.twitchdb.tv/api/intro/status/' + data.twitch_id).on('complete', function(twitchdb) {
@@ -145,14 +135,13 @@ app.get('/account/', function(req, res) {
 	}
 });
 
-app.get('/redeem/', function(req, res) {
-	if (req.session.reddit) {
-		var title = "Redeem " + app.locals.name;
-	  res.render('redeem', { title: title });
-	}
-	else {
-		res.redirect("/");
-	}
+app.get('/leaderboard/', function(req, res) {
+	db.users.getAll().then(function(data) {
+		data.sort(function(a, b) {
+		  return parseFloat(a.balance) - parseFloat(b.balance);
+		}).reverse();
+		res.render('leaderboard', { title: "Leaderboard", data: data });
+	});
 });
 
 app.get('/admin/', function(req, res) {
@@ -530,7 +519,7 @@ app.post('/users/get/list/', function(req, res) {
 				list.push(data[i]);
 			}
 			else if (req.body.field.substring(0, 6) == "points") {
-				if (parseInt(req.body.field.replace("points-", "")) <= data[i].balance) {
+				if (parseFloat(req.body.field.replace("points-", "")) <= data[i].balance) {
 					list.push(data[i])
 				}
 			}
@@ -552,7 +541,7 @@ app.post('/users/update/', function(req, res) {
 		}
 		else {
 			var old = data.balance;
-			data.balance = parseInt(req.body.balance);
+			data.balance = parseFloat(req.body.balance);
 			data.type = req.body.type;
 			data.bio = req.body.bio;
 			data.display_type = req.body.display_type;
@@ -589,7 +578,7 @@ app.post('/users/update/balance/relative/', function(req, res) {
 			res.send({ message: "not_found" });
 		}
 		else {
-			data.balance = data.balance + parseInt(req.body.balance);
+			data.balance = data.balance + parseFloat(req.body.balance);
 			db.users.update(data.reddit_id, data).then(function() {
 				Promise.all([helpers.reddit.setFlair(data), helpers.discord.setRole(data)]).then(function(response) {
 					res.send({ message: "success", data: data });
@@ -618,12 +607,12 @@ app.post('/users/generate/', function(req, res) {
 						discord_name: null,
 						type: req.body.type,
 						bio: req.body.bio,
-						balance: parseInt(req.body.balance),
+						balance: parseFloat(req.body.balance),
 						display_type: req.body.display_type,
 						transactions: [
 							{
 								timestamp: Date.now(),
-								difference: parseInt(req.body.balance),
+								difference: parseFloat(req.body.balance),
 								from: "System",
 								title: "Account Created",
 								description: null,
@@ -648,7 +637,7 @@ app.post('/users/generate/', function(req, res) {
 
 // Add transaction record for user
 app.post('/users/update/transaction/', function(req, res) {
-	if (parseInt(req.body.difference) !== 0) {
+	if (parseFloat(req.body.difference) !== 0) {
 		db.users.getByRedditUsername(req.body.username).then(function(data) {
 			if (!data) {
 				res.send({ message: "not_found" });
@@ -656,7 +645,7 @@ app.post('/users/update/transaction/', function(req, res) {
 			else {
 				data.transactions.push({
 					timestamp: Date.now(),
-					difference: parseInt(req.body.difference),
+					difference: parseFloat(req.body.difference),
 					from: req.body.from,
 					title: req.body.title,
 					description: req.body.description,
@@ -696,9 +685,24 @@ app.post('/transactions/get/', function(req, res) {
 	else if (req.body.source == "reddit") {
 		db.users.getByRedditUsername(req.body.query.toLowerCase()).then(function(data) {
 			if (data) {
+				data.transactions = data.transactions.reverse()
+				var list = [],
+						j = [];
 				for (var i in data.transactions) {
-					list.push(data.transactions[i]);
+					if (!j[0]) {
+						j.push(data.transactions[i])
+						continue;
+					}
+					if (j[0].title == data.transactions[i].title) {
+						j.push(data.transactions[i]);
+					}
+					else {
+						list.push(j);
+						j = [];
+						j.push(data.transactions[i]);
+					}
 				}
+				list.push(j);
 			}
 			if (!list[0]) {
 				res.send({ message: "not_found" });
@@ -711,9 +715,24 @@ app.post('/transactions/get/', function(req, res) {
 	else if (req.body.source == "discord") {
 		db.users.getByDiscordId(req.body.query).then(function(data) {
 			if (data) {
+				data.transactions = data.transactions.reverse()
+				var list = [],
+						j = [];
 				for (var i in data.transactions) {
-					list.push(data.transactions[i]);
+					if (!j[0]) {
+						j.push(data.transactions[i])
+						continue;
+					}
+					if (j[0].title == data.transactions[i].title) {
+						j.push(data.transactions[i]);
+					}
+					else {
+						list.push(j);
+						j = [];
+						j.push(data.transactions[i]);
+					}
 				}
+				list.push(j);
 			}
 			if (!list[0]) {
 				res.send({ message: "not_found" });
@@ -1144,6 +1163,7 @@ function getCommunityStreams(offset)	{
     for (var i in data.streams) {
 			ids.push(data.streams[i].channel._id);
 		}
+		console.log(ids)
 		db.updateByTwitchId(ids, 0, data.streams.length);
 		offset += 100;
     if (data._total > offset) {

@@ -1,8 +1,8 @@
 {% include "./header.html" %}
 
-<div class="row" style="margin-top: 10px;">
+<div class="row grey darken-3 container-shadow" style="margin-top: 10px;">
   <div class="col s12">
-    <ul class="tabs grey darken-4 tabs-fixed-width" style="overflow: hidden;">
+    <ul class="tabs grey darken-3 tabs-fixed-width" style="overflow: hidden;">
       {% if mod %}
         <li class="tab col s4"><a href="#queue">Nomination Queue</a></li>
         <li class="tab col s4"><a href="#manage-users">Manage Users</a></li>
@@ -14,9 +14,9 @@
     </ul>
   </div>
 </div>
-<div class="row">
+<div class="row grey darken-3 container-shadow">
   <div id="queue" class="col s12">
-    <ul class="tabs grey darken-4 tabs-fixed-width" style="overflow: hidden; margin-bottom: 10px;">
+    <ul class="tabs grey darken-3 tabs-fixed-width" style="overflow: hidden; margin-bottom: 10px;">
       <li class="tab col s4"><a href="#queue-pending">Pending</a></li>
       <li class="tab col s4"><a href="#queue-approved">Approved</a></li>
       <li class="tab col s4"><a href="#queue-rejected">Rejected</a></li>
@@ -121,7 +121,7 @@
   </div>
   {% if mod %}
     <div id="manage-users" class="col s12">
-      <ul class="tabs grey darken-4 tabs-fixed-width" style="overflow: hidden;">
+      <ul class="tabs grey darken-3 tabs-fixed-width" style="overflow: hidden;">
         <li class="tab col s4"><a href="#get-user">Get User</a></li>
         <li class="tab col s4"><a href="#generate-users">Generate User</a></li>
         <li class="tab col s4"><a href="#user-list">User List</a></li>
