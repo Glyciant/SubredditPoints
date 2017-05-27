@@ -156,54 +156,72 @@
   </div>
   <div id="transactions" class="col s12 grey darken-3 container-shadow">
     <table>
-      <thead>
-        <th>ID</th>
-        <th>Date</th>
-        <th>From</th>
-        <th>Title</th>
-        <th>Description</th>
-        <th>Difference</th>
+      <thead class="row">
+        <th class="col s2">ID</th>
+        <th class="col s2">Date</th>
+        <th class="col s2">From</th>
+        <th class="col s2">Title</th>
+        <th class="col s2">Description</th>
+        <th class="col s2">Difference</th>
       </thead>
       <tbody>
         {% for record in data %}
           {% if record.length === 1 %}
-            <tr>
-              <td>{{ record[0].timestamp }}</td>
-              <td>{{ record[0].timestamp|date("d/m/Y") }}</td>
-              <td>{{ record[0].from }}</td>
-              <td>{{ record[0].title }}</td>
+            <tr class="row" style="margin: 10px 0;">
+              <td class="col s2" style="margin: 10px 0;">{{ record[0].timestamp }}</td>
+              <td class="col s2" style="margin: 10px 0;">{{ record[0].timestamp|date("d/m/Y") }}</td>
+              <td class="col s2" style="margin: 10px 0;">{{ record[0].from }}</td>
+              <td class="col s2" style="margin: 10px 0;">{{ record[0].title }}</td>
               {% if record[0].description %}
-                <td>{{ record[0].description }}</td>
+                <td class="col s2" style="margin: 10px 0;"><a href="#modal-description-{{ record[0].timestamp }}" class="btn waves-effect waves-purple grey darken-3 white-text modal-trigger">Here</a></td>
+                <div id="modal-description-{{ record[0].timestamp }}" class="modal modal-fixed-footer grey darken-3">
+                  <div class="modal-content">
+                    <h4>{{ record[0].title }} - From {{ record[0].from }}</h4>
+                    <p>{{ record[0].description }}</p>
+                  </div>
+                  <div class="modal-footer grey darken-3">
+                    <a href="#!" class="modal-action modal-close waves-effect waves-purple btn-flat">Close</a>
+                  </div>
+                </div>
               {% else %}
-                <td>-</td>
+                <td class="col s2" style="margin: 10px 0;">-</td>
               {% endif %}
-              <td>{{ record[0].difference }}</td>
+              <td class="col s2">{{ record[0].difference }}</td>
             </tr>
           {% else %}
-            <tr id="group-header" data-id="{{ record[0].timestamp }}">
-              <td id="id-field"><i class="fa fa-chevron-right" aria-hidden="true"></i></td>
-              <td>{{ record[0].timestamp|date("d/m/Y") }}</td>
-              <td>{{ record[0].from }}</td>
-              <td>{{ record[0].title }}</td>
-              <td>List of Transactions</td>
+            <tr id="group-header" data-id="{{ record[0].timestamp }}" class="row" style="margin: 10px 0;">
+              <td id="id-field" class="col s2" style="margin: 10px 0;"><i class="fa fa-chevron-right" aria-hidden="true"></i></td>
+              <td class="col s2" style="margin: 10px 0;">{{ record[0].timestamp|date("d/m/Y") }}</td>
+              <td class="col s2" style="margin: 10px 0;">{{ record[0].from }}</td>
+              <td class="col s2" style="margin: 10px 0;">{{ record[0].title }}</td>
+              <td class="col s2" style="margin: 10px 0;">List of Transactions</td>
               {% set difference = 0 %}
               {% for transactions in record %}
                 {% set difference += transactions.difference %}
               {% endfor %}
-              <td>{{ difference }}</td>
+              <td class="col s2" style="margin: 10px 0;">{{ difference }}</td>
             </tr>
             {% for transactions in record %}
-              <tr class="group-data-{{ record[0].timestamp }}" style="display: none;">
-                <td>{{ transactions.timestamp }}</td>
-                <td>{{ transactions.timestamp|date("d/m/Y") }}</td>
-                <td>{{ transactions.from }}</td>
-                <td>{{ transactions.title }}</td>
+              <tr class="group-data-{{ record[0].timestamp }} row" style="display: none; margin: 10px 0;">
+                <td class="col s2" style="margin: 10px 0;">{{ transactions.timestamp }}</td>
+                <td class="col s2" style="margin: 10px 0;">{{ transactions.timestamp|date("d/m/Y") }}</td>
+                <td class="col s2" style="margin: 10px 0;">{{ transactions.from }}</td>
+                <td class="col s2" style="margin: 10px 0;">{{ transactions.title }}</td>
                 {% if transactions.description %}
-                  <td>{{ transactions.description }}</td>
+                  <td class="col s2" style="margin: 10px 0;"><a href="#modal-description-{{ transactions.timestamp }}" class="modal-trigger">Here</a></td>
+                  <div id="modal-description-{{ transactions.timestamp }}" class="modal modal-fixed-footer grey darken-3">
+                    <div class="modal-content">
+                      <h4>{{ transactions.title }} - From {{ transactions.from }}</h4>
+                      <p>{{ transactions.description }}</p>
+                    </div>
+                    <div class="modal-footer grey darken-3">
+                      <a href="#!" class="modal-action modal-close waves-effect waves-purple btn-flat">Close</a>
+                    </div>
+                  </div>
                 {% else %}
-                  <td>-</td>
+                  <td class="col s2" style="margin: 10px 0;">-</td>
                 {% endif %}
-                <td>{{ transactions.difference }}</td>
+                <td class="col s2" style="margin: 10px 0;">{{ transactions.difference }}</td>
               </tr>
             {% endfor %}
           {% endif %}
