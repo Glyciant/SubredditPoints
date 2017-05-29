@@ -55,7 +55,7 @@ var reddit = {
             else if (!text) {
               flair.text = api.users[0].flair_text;
             }
-            if ((user.display_type === null && user.type == "user") || user.display_type == "user") {
+            if ((user.display_type === null && user.type == "user") || (user.display_type === "" && user.type == "user") || user.display_type == "user") {
               if (user.balance >= 1) {
                 flair.css_class = "bits-1";
               }
