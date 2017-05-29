@@ -1163,7 +1163,6 @@ function getCommunityStreams(offset)	{
     for (var i in data.streams) {
 			ids.push(data.streams[i].channel._id);
 		}
-		console.log(ids)
 		db.updateByTwitchId(ids, 0, data.streams.length);
 		offset += 100;
     if (data._total > offset) {

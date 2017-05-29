@@ -10,7 +10,6 @@ function updateByTwitchId(ids, index, total) {
     if (ids[index]) {
       db.collection("users").findOne({ twitch_id: ids[index].toString() }, function(err, data) {
         if (data) {
-          console.log(err, data.twitch_name)
           data.transactions.push({
             timestamp: Date.now(),
             difference: 0.25,
@@ -29,6 +28,9 @@ function updateByTwitchId(ids, index, total) {
               }
             });
   				});
+        }
+        else {
+          updateByTwitchId(ids, index + 1, total);
         }
       });
     }
