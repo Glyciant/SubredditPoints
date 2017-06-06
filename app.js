@@ -41,9 +41,11 @@ app.get('*', function(req, res, next) {
 			if (data) {
 				if (data.type == "mod" || data.type == "helper") {
 					res.locals.admin = true;
+					req.session.admin = true;
 				}
 				if (data.type == "mod") {
 					res.locals.mod = true;
+					req.session.mod = true;
 				}
 				res.locals.type = data.display_type;
 				if (data.twitch_id) {
@@ -535,212 +537,242 @@ app.post('/users/get/list/', function(req, res) {
 
 // Update user
 app.post('/users/update/', function(req, res) {
-	db.users.getByRedditUsername(req.body.username).then(function(data) {
-		if (!data) {
-			res.send({ message: "not_found" });
-		}
-		else {
-			var old = data.balance;
-			data.balance = parseFloat(req.body.balance);
-			data.type = req.body.type;
-			data.bio = req.body.bio;
-			data.display_type = req.body.display_type;
-			db.users.update(data.reddit_id, data).then(function() {
-				Promise.all([helpers.reddit.setFlair(data, null), helpers.discord.setRole(data)]).then(function(response) {
-					res.send({ message: "success", data: data, old: old });
-				});
-			});
-		}
-	});
-});
-
-// Update user for TwitchDB
-app.post('/users/update/twitchdb/', function(req, res) {
-	db.users.getByRedditUsername(req.body.username).then(function(data) {
-		if (!data) {
-			res.send({ message: "not_found" });
-		}
-		else {
-			data.flair = req.body.flair;
-			db.users.update(data.reddit_id, data).then(function() {
-				Promise.all([helpers.reddit.setFlair(data, req.body.text), helpers.discord.setRole(data)]).then(function(response) {
-					res.send({ message: "success", data: data });
-				});
-			});
-		}
-	});
-});
-
-// Update user's balance with addition/subtraction
-app.post('/users/update/balance/relative/', function(req, res) {
-	db.users.getByRedditUsername(req.body.username).then(function(data) {
-		if (!data) {
-			res.send({ message: "not_found" });
-		}
-		else {
-			data.balance = data.balance + parseFloat(req.body.balance);
-			db.users.update(data.reddit_id, data).then(function() {
-				Promise.all([helpers.reddit.setFlair(data), helpers.discord.setRole(data)]).then(function(response) {
-					res.send({ message: "success", data: data });
-				});
-			});
-		}
-	});
-});
-
-// Generate user
-app.post('/users/generate/', function(req, res) {
-	db.users.getByRedditUsername(req.body.username.toLowerCase()).then(function(data) {
-		if (data) {
-			res.send({ message: "exists" });
-		}
-		else {
-			restler.get('https://www.reddit.com/user/' + req.body.username + '/about/.json').on("complete", function(account) {
-				if (account.data) {
-					var data = {
-						reddit_id: account.data.id,
-						reddit_username: account.data.name.toLowerCase(),
-						reddit_name: account.data.name,
-						twitch_id: null,
-						twitch_name: null,
-						discord_id: null,
-						discord_name: null,
-						type: req.body.type,
-						bio: req.body.bio,
-						balance: parseFloat(req.body.balance),
-						display_type: req.body.display_type,
-						transactions: [
-							{
-								timestamp: Date.now(),
-								difference: parseFloat(req.body.balance),
-								from: "System",
-								title: "Account Created",
-								description: null,
-								mod_note: null
-							}
-						]
-					};
-					db.users.insert(data).then(function() {
-						helpers.reddit.setFlair(data).then(function() {
-							res.send({ message: "success" });
-						});
-						res.send({ message: "success" });
-					});
-				}
-				else {
-					res.send({ message: "not_found" });
-				}
-			});
-		}
-	});
-});
-
-// Add transaction record for user
-app.post('/users/update/transaction/', function(req, res) {
-	if (parseFloat(req.body.difference) !== 0) {
+	if (req.session.reddit.name == req.body.username) {
 		db.users.getByRedditUsername(req.body.username).then(function(data) {
 			if (!data) {
 				res.send({ message: "not_found" });
 			}
 			else {
-				data.transactions.push({
-					timestamp: Date.now(),
-					difference: parseFloat(req.body.difference),
-					from: req.body.from,
-					title: req.body.title,
-					description: req.body.description,
-					mod_note: req.body.mod_note
-				}),
+				var old = data.balance;
+				data.balance = parseFloat(req.body.balance);
+				data.type = req.body.type;
+				data.bio = req.body.bio;
+				data.display_type = req.body.display_type;
 				db.users.update(data.reddit_id, data).then(function() {
-					res.send({ message: "success" });
+					Promise.all([helpers.reddit.setFlair(data, null), helpers.discord.setRole(data)]).then(function(response) {
+						res.send({ message: "success", data: data, old: old });
+					});
 				});
 			}
 		});
 	}
 	else {
-		res.send({ message: "success" });
+		res.send({ message: "not_found" });
+	}
+});
+
+// Update user for TwitchDB
+app.post('/users/update/twitchdb/', function(req, res) {
+	if (req.session.reddit.name == req.body.username) {
+		db.users.getByRedditUsername(req.body.username).then(function(data) {
+			if (!data) {
+				res.send({ message: "not_found" });
+			}
+			else {
+				data.flair = req.body.flair;
+				db.users.update(data.reddit_id, data).then(function() {
+					Promise.all([helpers.reddit.setFlair(data, req.body.text), helpers.discord.setRole(data)]).then(function(response) {
+						res.send({ message: "success", data: data });
+					});
+				});
+			}
+		});
+	}
+	else {
+		res.send({ message: "unauthorized" });
+	}
+});
+
+// Update user's balance with addition/subtraction
+app.post('/users/update/balance/relative/', function(req, res) {
+	if (req.session.reddit.name == req.body.username) {
+		db.users.getByRedditUsername(req.body.username).then(function(data) {
+			if (!data) {
+				res.send({ message: "not_found" });
+			}
+			else {
+				data.balance = data.balance + parseFloat(req.body.balance);
+				db.users.update(data.reddit_id, data).then(function() {
+					Promise.all([helpers.reddit.setFlair(data), helpers.discord.setRole(data)]).then(function(response) {
+						res.send({ message: "success", data: data });
+					});
+				});
+			}
+		});
+	}
+	else {
+		res.send({ message: "unauthorized" });
+	}
+});
+
+// Generate user
+app.post('/users/generate/', function(req, res) {
+	if (req.session.mod === true) {
+		db.users.getByRedditUsername(req.body.username.toLowerCase()).then(function(data) {
+			if (data) {
+				res.send({ message: "exists" });
+			}
+			else {
+				restler.get('https://www.reddit.com/user/' + req.body.username + '/about/.json').on("complete", function(account) {
+					if (account.data) {
+						var data = {
+							reddit_id: account.data.id,
+							reddit_username: account.data.name.toLowerCase(),
+							reddit_name: account.data.name,
+							twitch_id: null,
+							twitch_name: null,
+							discord_id: null,
+							discord_name: null,
+							type: req.body.type,
+							bio: req.body.bio,
+							balance: parseFloat(req.body.balance),
+							display_type: req.body.display_type,
+							transactions: [
+								{
+									timestamp: Date.now(),
+									difference: parseFloat(req.body.balance),
+									from: "System",
+									title: "Account Created",
+									description: null,
+									mod_note: null
+								}
+							]
+						};
+						db.users.insert(data).then(function() {
+							helpers.reddit.setFlair(data).then(function() {
+								res.send({ message: "success" });
+							});
+							res.send({ message: "success" });
+						});
+					}
+					else {
+						res.send({ message: "not_found" });
+					}
+				});
+			}
+		});
+	}
+	else {
+		res.send({ message: "not_found" });
+	}
+});
+
+// Add transaction record for user
+app.post('/users/update/transaction/', function(req, res) {
+	if (req.session.reddit.name == req.body.username) {
+		if (parseFloat(req.body.difference) !== 0) {
+			db.users.getByRedditUsername(req.body.username).then(function(data) {
+				if (!data) {
+					res.send({ message: "not_found" });
+				}
+				else {
+					data.transactions.push({
+						timestamp: Date.now(),
+						difference: parseFloat(req.body.difference),
+						from: req.body.from,
+						title: req.body.title,
+						description: req.body.description,
+						mod_note: req.body.mod_note
+					}),
+					db.users.update(data.reddit_id, data).then(function() {
+						res.send({ message: "success" });
+					});
+				}
+			});
+		}
+		else {
+			res.send({ message: "success" });
+		}
+	}
+	else {
+		res.send({ message: "not_found" });
 	}
 });
 
 // Get transactions
 app.post('/transactions/get/', function(req, res) {
-	var list = [];
-	if (req.body.source == "id") {
-		db.users.getAll().then(function(data) {
-			for (var i in data) {
-				for (var j in data[i].transactions) {
-					if (data[i].transactions[j].timestamp.toString() == req.body.query.toString()) {
-						list.push(data[i].transactions[j]);
+	if (req.session.reddit.name == req.body.username) {
+		var list = [];
+		if (req.body.source == "id") {
+			db.users.getAll().then(function(data) {
+				for (var i in data) {
+					for (var j in data[i].transactions) {
+						if (data[i].transactions[j].timestamp.toString() == req.body.query.toString()) {
+							list.push(data[i].transactions[j]);
+						}
 					}
 				}
-			}
-			if (!list[0]) {
-				res.send({ message: "not_found" });
-			}
-			else {
-				res.send({ message: "success", data: list });
-			}
-		});
-	}
-	else if (req.body.source == "reddit") {
-		db.users.getByRedditUsername(req.body.query.toLowerCase()).then(function(data) {
-			if (data) {
-				data.transactions = data.transactions.reverse()
-				var list = [],
-						j = [];
-				for (var i in data.transactions) {
-					if (!j[0]) {
-						j.push(data.transactions[i])
-						continue;
-					}
-					if (j[0].title == data.transactions[i].title) {
-						j.push(data.transactions[i]);
-					}
-					else {
-						list.push(j);
-						j = [];
-						j.push(data.transactions[i]);
-					}
+				if (!list[0]) {
+					res.send({ message: "not_found" });
 				}
-				list.push(j);
-			}
-			if (!list[0]) {
-				res.send({ message: "not_found" });
-			}
-			else {
-				res.send({ message: "success", data: list });
-			}
-		});
-	}
-	else if (req.body.source == "discord") {
-		db.users.getByDiscordId(req.body.query).then(function(data) {
-			if (data) {
-				data.transactions = data.transactions.reverse()
-				var list = [],
-						j = [];
-				for (var i in data.transactions) {
-					if (!j[0]) {
-						j.push(data.transactions[i])
-						continue;
-					}
-					if (j[0].title == data.transactions[i].title) {
-						j.push(data.transactions[i]);
-					}
-					else {
-						list.push(j);
-						j = [];
-						j.push(data.transactions[i]);
-					}
+				else {
+					res.send({ message: "success", data: list });
 				}
-				list.push(j);
-			}
-			if (!list[0]) {
-				res.send({ message: "not_found" });
-			}
-			else {
-				res.send({ message: "success", data: list });
-			}
-		});
+			});
+		}
+		else if (req.body.source == "reddit") {
+			db.users.getByRedditUsername(req.body.query.toLowerCase()).then(function(data) {
+				if (data) {
+					data.transactions = data.transactions.reverse()
+					var list = [],
+							j = [];
+					for (var i in data.transactions) {
+						if (!j[0]) {
+							j.push(data.transactions[i])
+							continue;
+						}
+						if (j[0].title == data.transactions[i].title) {
+							j.push(data.transactions[i]);
+						}
+						else {
+							list.push(j);
+							j = [];
+							j.push(data.transactions[i]);
+						}
+					}
+					list.push(j);
+				}
+				if (!list[0]) {
+					res.send({ message: "not_found" });
+				}
+				else {
+					res.send({ message: "success", data: list });
+				}
+			});
+		}
+		else if (req.body.source == "discord") {
+			db.users.getByDiscordId(req.body.query).then(function(data) {
+				if (data) {
+					data.transactions = data.transactions.reverse()
+					var list = [],
+							j = [];
+					for (var i in data.transactions) {
+						if (!j[0]) {
+							j.push(data.transactions[i])
+							continue;
+						}
+						if (j[0].title == data.transactions[i].title) {
+							j.push(data.transactions[i]);
+						}
+						else {
+							list.push(j);
+							j = [];
+							j.push(data.transactions[i]);
+						}
+					}
+					list.push(j);
+				}
+				if (!list[0]) {
+					res.send({ message: "not_found" });
+				}
+				else {
+					res.send({ message: "success", data: list });
+				}
+			});
+		}
+		else {
+			res.send({ message: "unknown" });
+		}
 	}
 	else {
 		res.send({ message: "unknown" });
@@ -749,32 +781,42 @@ app.post('/transactions/get/', function(req, res) {
 
 // Approve Nomination
 app.post('/admin/approve/', function(req, res) {
-	db.nominations.getByNominationId(parseInt(req.body.id)).then(function(data) {
-		if (!data) {
-			res.send({ message: "not_found" });
-		}
-		else {
-			data.status = "approved";
-			db.nominations.update(data.nomination_id, data).then(function() {
-				res.send({ message: "success", data: data });
-			});
-		}
-	});
+	if (req.session.mod === true) {
+		db.nominations.getByNominationId(parseInt(req.body.id)).then(function(data) {
+			if (!data) {
+				res.send({ message: "not_found" });
+			}
+			else {
+				data.status = "approved";
+				db.nominations.update(data.nomination_id, data).then(function() {
+					res.send({ message: "success", data: data });
+				});
+			}
+		});
+	}
+	else {
+		res.send({ message: "not_found" });
+	}
 });
 
 // Reject Nomination
 app.post('/admin/reject/', function(req, res) {
-	db.nominations.getByNominationId(parseInt(req.body.id)).then(function(data) {
-		if (!data) {
-			res.send({ message: "not_found" });
-		}
-		else {
-			data.status = "rejected";
-			db.nominations.update(data.nomination_id, data).then(function() {
-				res.send({ message: "success", data: data });
-			});
-		}
-	});
+	if (req.session.mod === true) {
+		db.nominations.getByNominationId(parseInt(req.body.id)).then(function(data) {
+			if (!data) {
+				res.send({ message: "not_found" });
+			}
+			else {
+				data.status = "rejected";
+				db.nominations.update(data.nomination_id, data).then(function() {
+					res.send({ message: "success", data: data });
+				});
+			}
+		});
+	}
+	else {
+		res.send({ message: "not_found" });
+	}
 });
 
 // 404 error
@@ -1133,15 +1175,15 @@ As part of an attempt to cut back on the number of repetitive threads on /r/Twit
 We hope these links will be helpful. If so, consider deleting your post to reduce spam on the subreddit. If the suggested links are irrelvant to your question, feel free to ignore this comment and continue as you were.
 
 *I'm a bot and this action was performed automatically. If you have any questions or concerns, please contact the subreddit moderators via [modmail](https://www.reddit.com/message/compose?to=%2Fr%2FTwitch).*`
-										helpers.reddit.comment("t3_" + data.data.children[0].data.id, comment).then(function() {
-											restler.get('https://www.reddit.com/user/' + config.reddit.bot.username  + "/comments.json?limit=1&sort=new").on('complete', function(account) {
-												helpers.reddit.distinguish("t1_" + account.data.children[0].data.id).then(function() {
-													helpers.reddit.report("t3_" + data.data.children[0].data.id, "Possible Repetitive Thread").then(function() {
-														helpers.reddit.remove("t1_" + account.data.children[0].data.id);
-													});
-												});
-											});
-										});
+										// helpers.reddit.comment("t3_" + data.data.children[0].data.id, comment).then(function() {
+										// 	restler.get('https://www.reddit.com/user/' + config.reddit.bot.username  + "/comments.json?limit=1&sort=new").on('complete', function(account) {
+										// 		helpers.reddit.distinguish("t1_" + account.data.children[0].data.id).then(function() {
+										// 			helpers.reddit.report("t3_" + data.data.children[0].data.id, "Possible Repetitive Thread").then(function() {
+										// 				helpers.reddit.remove("t1_" + account.data.children[0].data.id);
+										// 			});
+										// 		});
+										// 	});
+										// });
 									}
 								}
 							});
