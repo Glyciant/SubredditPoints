@@ -19,8 +19,8 @@ function updateByTwitchId(ids, index, total) {
             mod_note: null
           });
           data.balance = parseFloat(data.balance) + 0.25;
-          Promise.all([helpers.reddit.setFlair(data, null), helpers.discord.setRole(data)]).then(function(response) {
-            db.collection("users").updateOne({ twitch_id: ids[index].toString() }, { $inc: { balance: 0.25 }, $set: { transactions: data.transactions } }, function(err, result) {
+          db.collection("users").updateOne({ twitch_id: ids[index].toString() }, { $inc: { balance: 0.25 }, $set: { transactions: data.transactions } }, function(err, result) {
+            Promise.all([helpers.reddit.setFlair(data, null), helpers.discord.setRole(data)]).then(function(response) {
               assert.equal(null, err);
               db.close();
               if (index < total - 1) {
