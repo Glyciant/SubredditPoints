@@ -537,7 +537,7 @@ app.post('/users/get/list/', function(req, res) {
 
 // Update user
 app.post('/users/update/', function(req, res) {
-	if (req.session.reddit.name == req.body.username) {
+	if (req.session.mod === true) {
 		db.users.getByRedditUsername(req.body.username).then(function(data) {
 			if (!data) {
 				res.send({ message: "not_found" });
@@ -659,7 +659,7 @@ app.post('/users/generate/', function(req, res) {
 
 // Add transaction record for user
 app.post('/users/update/transaction/', function(req, res) {
-	if (req.session.reddit.name == req.body.username) {
+	if (req.session.reddit.name == req.body.username || req.session.mod === true) {
 		if (parseFloat(req.body.difference) !== 0) {
 			db.users.getByRedditUsername(req.body.username).then(function(data) {
 				if (!data) {
@@ -1175,15 +1175,15 @@ As part of an attempt to cut back on the number of repetitive threads on /r/Twit
 We hope these links will be helpful. If so, consider deleting your post to reduce spam on the subreddit. If the suggested links are irrelvant to your question, feel free to ignore this comment and continue as you were.
 
 *I'm a bot and this action was performed automatically. If you have any questions or concerns, please contact the subreddit moderators via [modmail](https://www.reddit.com/message/compose?to=%2Fr%2FTwitch).*`
-										// helpers.reddit.comment("t3_" + data.data.children[0].data.id, comment).then(function() {
-										// 	restler.get('https://www.reddit.com/user/' + config.reddit.bot.username  + "/comments.json?limit=1&sort=new").on('complete', function(account) {
-										// 		helpers.reddit.distinguish("t1_" + account.data.children[0].data.id).then(function() {
-										// 			helpers.reddit.report("t3_" + data.data.children[0].data.id, "Possible Repetitive Thread").then(function() {
-										// 				helpers.reddit.remove("t1_" + account.data.children[0].data.id);
-										// 			});
-										// 		});
-										// 	});
-										// });
+										helpers.reddit.comment("t3_" + data.data.children[0].data.id, comment).then(function() {
+											restler.get('https://www.reddit.com/user/' + config.reddit.bot.username  + "/comments.json?limit=1&sort=new").on('complete', function(account) {
+												helpers.reddit.distinguish("t1_" + account.data.children[0].data.id).then(function() {
+													helpers.reddit.report("t3_" + data.data.children[0].data.id, "Possible Repetitive Thread").then(function() {
+														helpers.reddit.remove("t1_" + account.data.children[0].data.id);
+													});
+												});
+											});
+										});
 									}
 								}
 							});
